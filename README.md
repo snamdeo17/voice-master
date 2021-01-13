@@ -7,6 +7,7 @@ Step 1 : Download the repository
 
 $ git clone https://github.com/snamdeo17/voice-master.git
 $ cd voice-master
+
 Step 2 : Build the project using maven
 
 $ mvn clean install
