@@ -1,0 +1,7 @@
+package com.mastercard.voicemaster.exception;
+
+public class WalletIdDoesNotExistException extends  Exception {
+    public WalletIdDoesNotExistException(int walletId) {
+        super("Wallet with walletId : "+walletId+" does not exist");
+    }
+}
