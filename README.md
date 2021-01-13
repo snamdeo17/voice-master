@@ -10,6 +10,7 @@ $ git clone https://github.com/snamdeo17/voice-master.git
 $ cd voice-master
 
 Step 3 : Setup your mysql database
+
 Execute voice-master/data.sql on voiceMaster db - See application.properties for DB configuration
 
 Step 4 : Build the project using maven
