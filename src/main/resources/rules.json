@@ -1,0 +1,3 @@
+[{"action":"PAYMENT_REQUEST", "grammer":"please pay my bills"},
+{"action":"AUHENTICATE", "grammer":"my pin is"},
+{"action":"INIT", "grammer":"hello"}]
