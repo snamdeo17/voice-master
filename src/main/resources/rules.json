@@ -1,3 +1,12 @@
-[{"action":"PAYMENT_REQUEST", "grammer":"please pay my bills"},
-{"action":"AUHENTICATE", "grammer":"my pin is"},
-{"action":"INIT", "grammer":"hello"}]
+[
+
+{"action":"ASK_LIST", "input":"please show my bills","output":"dear #user#"},
+{"action":"PROVIDECODE", "input":"my code is \\d+", "output":"thank you #user#. Now you can start with the payment commands"},
+{"action":"INIT", "input":"hello", "output":"Hello"},
+{"action":"THANKYOU", "input":"thank you", "output":"My pleasure"},
+{"action":"ALPHABET", "input":"teach me alphabets", "output":"Here is it, A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"},
+{"action":"CURRENTDATE", "input":"what is current date", "output":"It is #date#"},
+{"action":"BILLPAY", "input":"please pay my \\w+ bill", "output":"I am fetching your account details. You have #amount# in your account."},
+{"action":"PAYCONFIRMATION", "input":"yes please proceed", "output":"Ok, I am paying the bill"},
+{"action":"BYE", "input":"bye bye", "output":"Bye Bye"}
+]

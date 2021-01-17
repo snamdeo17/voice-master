@@ -1,5 +1,8 @@
 package com.mastercard.voicemaster.controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,11 +21,12 @@ public class BotController {
 
 	@GetMapping("/bot/message")
 	@ResponseBody
-	public String getMessage(@RequestParam(value = "message") String message) {
+	public String getMessage(@RequestParam(value = "message") String message, HttpServletRequest request,
+			HttpServletResponse response) {
 
 		String resp = null;
 		try {
-			resp = botService.processMessage(message);
+			resp = botService.processMessage(message, request, response);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

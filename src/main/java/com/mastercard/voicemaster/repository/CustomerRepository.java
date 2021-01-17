@@ -11,5 +11,7 @@ public interface CustomerRepository extends CrudRepository<Customer, Integer> {
     @Query("SELECT c FROM Customer c WHERE c.email=:email")
     Iterable<Customer> findCustomerByEmail(@Param("email") String email);
 
+	Customer findBySecretCode(String pin);
+
 
 }
