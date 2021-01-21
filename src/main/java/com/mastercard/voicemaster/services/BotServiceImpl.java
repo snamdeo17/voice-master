@@ -106,6 +106,54 @@ public class BotServiceImpl implements IBotService {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
 
+					} else if (rule.getAction().equals("ASK_ACCNT_BALANCE")) {
+						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
+						if (userOptional.isPresent()) {
+							Customer user = userOptional.get();							
+							String output = rule.getOutput();
+							output = output.replace("#user#", user.getFname() + " " + user.getLname());
+							float balance = 0;
+							List<Account> accounts  = user.getCustomerAccounts();
+							for(Account acnt : accounts) {								
+								balance = balance + acnt.getBalance();
+							}
+							
+							if ( balance == 0) {
+								output = output + " your account balance is " + balance + ". Please add amount to your account";
+							} else {
+								output = output + " your account balance is " + balance ;
+								
+							}
+							obj.put("resp", output);
+						} else {
+							obj.put("resp", "I don't have any matching secret code in database. Please provide valid secret code.");
+						}
+
+					} else if (rule.getAction().equals("ADD_BALANCE")) {
+						Pattern p = Pattern.compile("add (\\d+) rupees");
+						Matcher m = p.matcher(message);
+						while (m.find()) {
+							Float balanceToAdd = Float.valueOf(m.group(1));							
+							Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
+							if (userOptional.isPresent()) {							
+								Customer user = userOptional.get();
+								Wallet wallet = user.getWallet();
+								Account account = wallet.getAccountsInWallet().get(0);
+								Float existingBalance = walletService.getAccountBalanceForCurrentWallet(
+										user.getWallet().getWalletId(), account.getAccountNumber());
+								
+								String output = rule.getOutput();
+								output = output.replace("#user#", user.getFname() + " " + user.getLname());
+								
+								Account acc = walletService.depositToAccount(wallet.getWalletId(), account.getAccountNumber(), balanceToAdd, "DEPOSIT");
+								
+								output = output +" "+ balanceToAdd +" rupees is added into your account. Your updated account balance is " +acc.getBalance() + " rupees.";
+								
+								obj.put("resp", output);
+							} else {
+								obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
+							}
+						}
 					} else if (rule.getAction().equals("BILLPAY")) {
 						Pattern p = Pattern.compile("my (\\w+) bill");
 						Matcher m = p.matcher(message);

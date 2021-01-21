@@ -8,5 +8,7 @@
 {"action":"CURRENTDATE", "input":"what is the current date", "output":"It is #date#"},
 {"action":"BILLPAY", "input":"pay my \\w+ bill", "output":"I am fetching your account details. You have #amount# in your account."},
 {"action":"PAYCONFIRMATION", "input":"yes", "output":"Ok, I am paying the bill"},
-{"action":"BYE", "input":"bye bye", "output":"Bye Bye"}
+{"action":"BYE", "input":"bye bye", "output":"Bye Bye"},
+{"action":"ASK_ACCNT_BALANCE", "input":"show my account balance", "output":"Dear #user#"},
+{"action":"ADD_BALANCE", "input":"add \\d+ rupees to my account", "output":"Dear #user#"}
 ]
