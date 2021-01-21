@@ -95,10 +95,10 @@ public class BotServiceImpl implements IBotService {
 							if (bills.isEmpty()) {
 								output = output + " There is no bill pending for you ";
 							} else {
-								output = output + " here is the list of pending items \n";
+								output = output + " here is the list of pending items: <br/><br/>";
 								for (Bill bill : bills) {
-									output = output + " " + bill.getName() + " bill with due date " + bill.getDueDate()
-											+ " \n";
+									output = output + " " + bill.getName() + " bill of amount " + bill.getAmount()
+											+ " with due date " + bill.getDueDate() + " <br/>";
 								}
 							}
 							obj.put("resp", output);
@@ -129,7 +129,8 @@ public class BotServiceImpl implements IBotService {
 									billRepo.save(bill);
 								} else if (bill != null && bill.getStatus().equals("PENDING")
 										&& balance < bill.getAmount()) {
-									res = res + "You don't have enough money in your account for paying " + billName + " bill";
+									res = res + "You don't have enough money in your account for paying " + billName
+											+ " bill";
 								} else {
 									res = res + "There is no pending bill found for " + billName;
 								}
@@ -162,13 +163,21 @@ public class BotServiceImpl implements IBotService {
 							}
 						}
 
+					} else if (rule.getAction().equals("BYE")) {
+						obj.put("userId", null);
+						response.setHeader("userId", null);
+						obj.put("resp", rule.getOutput());
 					} else if (rule.getAction().equals("CURRENTDATE")) {
 						obj.put("resp", rule.getOutput().replace("#date#", LocalDate.now().toString()));
 					} else {
 						obj.put("resp", rule.getOutput());
 					}
 				} else {
-					obj.put("resp", "Kindly authenticate yourself to start. Please Provide your secret code");
+					if (rule.getAction().equals("ASK_LIST")) {
+						obj.put("resp", "I don't know who you are. Kindly Provide your secret code");
+					} else {
+						obj.put("resp", "Kindly authenticate yourself to start. Please Provide your secret code");
+					}
 				}
 				break;
 			} else {

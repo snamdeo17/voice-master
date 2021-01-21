@@ -10,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 @Entity
+// @Table(uniqueConstraints={@UniqueConstraint(columnNames = {"user_user_id" ,
+// "name" , "status","amount"})})
 public class Bill implements Serializable {
 	/**
 	 * 

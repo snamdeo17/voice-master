@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
+//@Table(uniqueConstraints={@UniqueConstraint(columnNames = {"account_holder_user_id" })})
 public class Account implements Serializable {
 
     @Id //to set as primary key
