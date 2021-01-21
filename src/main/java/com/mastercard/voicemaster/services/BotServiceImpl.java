@@ -84,7 +84,7 @@ public class BotServiceImpl implements IBotService {
 					break;
 				}
 
-				if (userId != null) {
+				if (userId != null && !userId.isEmpty()) {
 					if (rule.getAction().equals("ASK_LIST")) {
 						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
 						if (userOptional.isPresent()) {
@@ -168,7 +168,7 @@ public class BotServiceImpl implements IBotService {
 								Float balance = walletService.getAccountBalanceForCurrentWallet(
 										user.getWallet().getWalletId(), account.getAccountNumber());
 								res = res.replace("#amount#", balance.toString());
-								Bill bill = billRepo.findByName(billName);
+								Bill bill = billRepo.findByUserIdAndBillName(user.getUserId(), billName);
 								if (bill != null && bill.getStatus().equals("PENDING") && balance >= bill.getAmount()) {
 									res = res + " and you have enough balance for paying your " + billName
 											+ " bill of amount " + bill.getAmount()
@@ -212,8 +212,8 @@ public class BotServiceImpl implements IBotService {
 						}
 
 					} else if (rule.getAction().equals("BYE")) {
-						obj.put("userId", null);
-						response.setHeader("userId", null);
+						obj.put("userId", "");
+						response.setHeader("userId", "");
 						obj.put("resp", rule.getOutput());
 					} else if (rule.getAction().equals("CURRENTDATE")) {
 						obj.put("resp", rule.getOutput().replace("#date#", LocalDate.now().toString()));
