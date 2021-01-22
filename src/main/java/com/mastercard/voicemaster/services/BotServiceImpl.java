@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,10 +40,11 @@ public class BotServiceImpl implements IBotService {
 
 	@Value("${json.path}")
 	private String path;
-
+	@SuppressWarnings("unchecked")
 	@Override
-	public String processMessage(String message, HttpServletRequest request, HttpServletResponse response)
+	public JSONObject processMessageJSON(String message, HttpServletRequest request, HttpServletResponse response)
 			throws Exception {
+
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		List<RuleDTO> rules = objectMapper.readValue(new File(path), new TypeReference<List<RuleDTO>>() {
@@ -106,7 +108,34 @@ public class BotServiceImpl implements IBotService {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
 
-					} else if (rule.getAction().equals("ASK_ACCNT_BALANCE")) {
+					} else if (rule.getAction().equals("HISTORY")) {
+					    JSONArray jsonArray = new JSONArray();
+						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
+						if (userOptional.isPresent()) {
+							Customer user = userOptional.get();
+							String output = rule.getOutput();
+							output = output.replace("#user#", user.getFname() + " " + user.getLname());
+							List<Bill> bills = billRepo.findTransactionHistoryByUserId(user.getUserId());
+							if (bills.isEmpty()) {
+								output = output + " There is no transaction history available for you ";
+							} else {
+								output = output + " here is the list of transactions you have made \n";
+								for (Bill bill : bills) {
+									output = output + " " + bill.getName() + " bill paid on " + bill.getPaidOn() + " of amount: " + bill.getAmount()
+											+ " \n";
+									JSONObject formDetailsJson = new JSONObject();
+							        formDetailsJson.put("billname", bill.getName());
+							        formDetailsJson.put("paidon", bill.getPaidOn());
+							        formDetailsJson.put("amount", bill.getAmount());
+							        jsonArray.add(formDetailsJson);
+								}
+							}
+							obj.put("resp", jsonArray);
+						} else {
+							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
+						}
+
+					}else if (rule.getAction().equals("ASK_ACCNT_BALANCE")) {
 						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
 						if (userOptional.isPresent()) {
 							Customer user = userOptional.get();							
@@ -232,7 +261,13 @@ public class BotServiceImpl implements IBotService {
 				obj.put("resp", "Sorry, I am not trained for this. Kindly ask what i know.");
 			}
 		}
-		return obj.toString();
+		return obj;
+	
 	}
+	@Override
+	public String processMessage(String message, HttpServletRequest request, HttpServletResponse response)
+			throws Exception {			JSONObject obj = processMessageJSON(message, request, response);
+			return obj.toString();
+			}
 
 }

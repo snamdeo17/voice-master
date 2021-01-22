@@ -3,6 +3,8 @@ package com.mastercard.voicemaster.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,6 +31,20 @@ public class BotController {
 			resp = botService.processMessage(message, request, response);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return resp;
+	}
+	
+	@GetMapping("/bot/message/transactionhistory")
+	@ResponseBody
+	public JSONObject getTransactionHistory(@RequestParam(value = "message") String message, HttpServletRequest request,
+			HttpServletResponse response) throws ParseException {
+
+		JSONObject resp = null;
+		try {
+			resp = botService.processMessageJSON(message, request, response);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return resp;
