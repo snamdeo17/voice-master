@@ -3,7 +3,9 @@ package com.mastercard.voicemaster.models;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -16,8 +18,8 @@ public class Wallet implements Serializable {
     @Id //to set as primary key
     @GeneratedValue(strategy = GenerationType.IDENTITY) // to set as autoincrement
     private int walletId;
-
-    @OneToMany(mappedBy = "walletHolder")
+    
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "walletHolder", cascade = CascadeType.ALL)
     private List<Account> accountsInWallet;
 
     @OneToOne
