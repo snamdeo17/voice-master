@@ -130,7 +130,14 @@ public class BotServiceImpl implements IBotService {
 							        jsonArray.add(formDetailsJson);
 								}
 							}
-							obj.put("resp", jsonArray);
+							if(jsonArray.isEmpty()) 
+							{
+								obj.put("resp", output);
+							}
+							else
+							{
+								obj.put("resp", jsonArray);
+							}
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
