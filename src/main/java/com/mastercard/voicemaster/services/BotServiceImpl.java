@@ -84,6 +84,17 @@ public class BotServiceImpl implements IBotService {
 						}
 					}
 					break;
+				} else if (rule.getAction().equals("BYE")) {
+					obj.put("userId", "");
+					response.setHeader("userId", "");
+					obj.put("resp", rule.getOutput());
+					break;
+				} else if (rule.getAction().equals("CURRENTDATE")) {
+					obj.put("resp", rule.getOutput().replace("#date#", LocalDate.now().toString()));
+					break;
+				} else if (rule.getAction().equals("THANKYOU")) {
+					obj.put("resp", rule.getOutput());
+					break;
 				}
 
 				if (userId != null && !userId.isEmpty()) {
@@ -103,7 +114,8 @@ public class BotServiceImpl implements IBotService {
 											+ " with due date " + bill.getDueDate() + " <br/>";
 								}
 							}
-							obj.put("resp", output);
+							obj.put("resp", output);	
+							obj.put("userId", userId);
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
@@ -116,6 +128,7 @@ public class BotServiceImpl implements IBotService {
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
 							List<Bill> bills = billRepo.findTransactionHistoryByUserId(user.getUserId());
+							float balance = getAccountBalance(userOptional, userId);
 							if (bills.isEmpty()) {
 								output = output + " There is no transaction history available for you ";
 							} else {
@@ -133,10 +146,15 @@ public class BotServiceImpl implements IBotService {
 							if(jsonArray.isEmpty()) 
 							{
 								obj.put("resp", output);
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);
 							}
 							else
 							{
 								obj.put("resp", jsonArray);
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);
+								
 							}
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
@@ -148,12 +166,7 @@ public class BotServiceImpl implements IBotService {
 							Customer user = userOptional.get();							
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
-							float balance = 0;
-							List<Account> accounts  = user.getCustomerAccounts();
-							for(Account acnt : accounts) {								
-								balance = balance + acnt.getBalance();
-							}
-							
+							float balance = getAccountBalance(userOptional, userId);
 							if ( balance == 0) {
 								output = output + " your account balance is " + balance + ". Please add amount to your account";
 							} else {
@@ -161,6 +174,8 @@ public class BotServiceImpl implements IBotService {
 								
 							}
 							obj.put("resp", output);
+							obj.put("userId", userId);
+							obj.put("accountBalance", balance);
 						} else {
 							obj.put("resp", "I don't have any matching secret code in database. Please provide valid secret code.");
 						}
@@ -186,6 +201,8 @@ public class BotServiceImpl implements IBotService {
 								output = output +" "+ balanceToAdd +" rupees is added into your account. Your updated account balance is " +acc.getBalance() + " rupees.";
 								
 								obj.put("resp", output);
+								obj.put("userId", userId);								
+								obj.put("accountBalance", acc.getBalance());
 							} else {
 								obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 							}
@@ -219,6 +236,8 @@ public class BotServiceImpl implements IBotService {
 									res = res + "There is no pending bill found for " + billName;
 								}
 								obj.put("resp", res);
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);
 							}
 						}
 
@@ -229,30 +248,27 @@ public class BotServiceImpl implements IBotService {
 							Customer user = userOptional.get();
 							Wallet wallet = user.getWallet();
 							Account account = wallet.getAccountsInWallet().get(0);
+							float balance = getAccountBalance(userOptional, userId);
 							List<Bill> bill = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
 							if (bill.size() > 0) {
 								for (Bill bill2 : bill) {
 									bill2.setStatus("PAID");
 									bill2.setPaidOn(LocalDate.now());
 									billRepo.save(bill2);
-									output = output + " I have paid the amount of " + bill2.getAmount() + " for your "
-											+ bill2.getName() + " bill";
+									output = output + ", I have paid the amount of " + bill2.getAmount() + " for your "
+											+ bill2.getName() + " bill.";
 									Account acc = walletService.withdrawFromAccount(wallet.getWalletId(),
 											account.getAccountNumber(), bill2.getAmount(), "WITHDRAW");
 									output = output + " Now you have " + acc.getBalance() + " in  your account.";
 								}
 								obj.put("resp", output);
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);
 							} else {
 								obj.put("resp", "I don't know the context. Sorry");
 							}
 						}
 
-					} else if (rule.getAction().equals("BYE")) {
-						obj.put("userId", "");
-						response.setHeader("userId", "");
-						obj.put("resp", rule.getOutput());
-					} else if (rule.getAction().equals("CURRENTDATE")) {
-						obj.put("resp", rule.getOutput().replace("#date#", LocalDate.now().toString()));
 					} else {
 						obj.put("resp", rule.getOutput());
 					}
@@ -265,7 +281,7 @@ public class BotServiceImpl implements IBotService {
 				}
 				break;
 			} else {
-				obj.put("resp", "Sorry, I am not trained for this. Kindly ask what i know.");
+				obj.put("resp", "Sorry, I am not trained for this. Kindly ask what I know.");
 			}
 		}
 		return obj;
@@ -276,5 +292,15 @@ public class BotServiceImpl implements IBotService {
 			throws Exception {			JSONObject obj = processMessageJSON(message, request, response);
 			return obj.toString();
 			}
+	
+	public float getAccountBalance(Optional<Customer> userOptional, String userId) {
+		float balance = 0;
+		Customer user = userOptional.get();
+		List<Account> accounts = user.getCustomerAccounts();
+		for (Account acnt : accounts) {
+			balance = balance + acnt.getBalance();
+		}
+		return balance;
+	}
 
 }
