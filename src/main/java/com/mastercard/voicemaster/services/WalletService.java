@@ -81,10 +81,12 @@ public interface WalletService {
      * @param accountId : Account associated with above walletId of which the transaction statement is requested
      * @param n : Number of transactions record requested
      * @return List of all bank transactions made
-     * @throws WalletIdDoesNotExistException - if wallet does not exist
+     * @throws WalletIdDouserIdesNotExistException - if wallet does not exist
      * @throws AccountNotAssociatedWithWalletException - if account is not associated with the walletId parameter
      */
     public List<BankTransaction> getStatement(Integer walletId, Integer accountId, Integer n) throws WalletIdDoesNotExistException,
             AccountNotAssociatedWithWalletException;
+
+	public Wallet getWalletDetails(Integer userId) throws CustomerDoesNotExistException;
 
 }
