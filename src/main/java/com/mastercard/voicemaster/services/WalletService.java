@@ -43,7 +43,7 @@ public interface WalletService {
      * @throws AccountNotAssociatedWithWalletException - if account is not associated with the walletId parameter
      * @throws InsufficientBalanceInWalletException - if amount to be withdrawn > balance (Assumes you can also withdraw 1 cents)
      */
-    public Account withdrawFromAccount(Integer walletId, Integer accountId, Float amount, String type) throws WalletIdDoesNotExistException,
+    public Account withdrawFromAccount(Integer walletId, Integer accountId, Float amount, String type, String billType) throws WalletIdDoesNotExistException,
             AccountNotAssociatedWithWalletException, InsufficientBalanceInWalletException;
 
 

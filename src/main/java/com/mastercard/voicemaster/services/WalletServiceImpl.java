@@ -82,7 +82,7 @@ public class WalletServiceImpl implements WalletService {
 
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = { Exception.class })
-	public Account withdrawFromAccount(Integer walletId, Integer accountId, Float amount, String type)
+	public Account withdrawFromAccount(Integer walletId, Integer accountId, Float amount, String type, String billType)
 			throws WalletIdDoesNotExistException, AccountNotAssociatedWithWalletException,
 			InsufficientBalanceInWalletException {
 
@@ -112,8 +112,15 @@ public class WalletServiceImpl implements WalletService {
 
 		// Make Entry in Transaction table
 		if ("WITHDRAW".equals(type)) {
+        	if(billType != null && !billType.isEmpty()) 
+        	{
+        		makeEntryInTransaction(Constants.WITHDRAW, amount, ac.getBalance(), Constants.WITHDRAW_DESCRIPTION + Constants.FOR + billType + Constants.PAYMENT, ac);
+        	}
+        	else 
+        	{
 			makeEntryInTransaction(Constants.WITHDRAW, amount, ac.getBalance(), Constants.WITHDRAW_DESCRIPTION, ac);
 		}
+        }
 		return ac;
 	}
 
@@ -202,7 +209,7 @@ public class WalletServiceImpl implements WalletService {
 		}
 
 		// Withdraw
-		Account fromAccount = this.withdrawFromAccount(fromWalletId, fromAccountId, amount, "TRANSFER");
+		Account fromAccount = this.withdrawFromAccount(fromWalletId, fromAccountId, amount, "TRANSFER", null);
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("$").append(amount).append(" transferred to accountId : ").append(toAccountId);
 		makeEntryInTransaction(Constants.TRANSFER, amount, fromAccount.getBalance(), stringBuilder.toString(),

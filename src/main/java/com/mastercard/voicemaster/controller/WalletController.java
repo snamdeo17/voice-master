@@ -87,7 +87,7 @@ public class WalletController {
 		ServiceResponse response = new ServiceResponse();
 
 		try {
-			Account ac = walletService.withdrawFromAccount(walletId, accountId, amount, "WITHDRAW");
+            Account ac = walletService.withdrawFromAccount(walletId, accountId, amount,"WITHDRAW", null);
 			response.setStatus("200");
 			response.setDescription("Amount " + amount + " withdrawn successfully!!");
 			response.setData(ac);

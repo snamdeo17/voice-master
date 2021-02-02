@@ -20,9 +20,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mastercard.voicemaster.dto.RuleDTO;
 import com.mastercard.voicemaster.models.Account;
+import com.mastercard.voicemaster.models.BankTransaction;
 import com.mastercard.voicemaster.models.Bill;
 import com.mastercard.voicemaster.models.Customer;
 import com.mastercard.voicemaster.models.Wallet;
+import com.mastercard.voicemaster.repository.AccountRepository;
+import com.mastercard.voicemaster.repository.BankTansactionRepository;
 import com.mastercard.voicemaster.repository.BillRepository;
 import com.mastercard.voicemaster.repository.CustomerRepository;
 
@@ -35,6 +38,12 @@ public class BotServiceImpl implements IBotService {
 	@Autowired
 	private CustomerRepository customerRepo;
 
+	@Autowired
+	private BankTansactionRepository bankTansactionRepository;
+	
+	@Autowired
+	private AccountRepository accountRepository;
+	
 	@Autowired
 	WalletService walletService;
 
@@ -123,23 +132,24 @@ public class BotServiceImpl implements IBotService {
 					} else if (rule.getAction().equals("HISTORY")) {
 					    JSONArray jsonArray = new JSONArray();
 						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
-						if (userOptional.isPresent()) {
+						Account account = accountRepository.findAccountByUserID(Integer.parseInt(userId));
+						if(account != null && userOptional.isPresent())
+						{
+							List<BankTransaction> bankTransactions = bankTansactionRepository.findTransactionHistoryByTransactionAcNumber(account.getAccountNumber());
 							Customer user = userOptional.get();
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
-							List<Bill> bills = billRepo.findTransactionHistoryByUserId(user.getUserId());
 							float balance = getAccountBalance(userOptional, userId);
-							if (bills.isEmpty()) {
+							if (bankTransactions.isEmpty()) {
 								output = output + " There is no transaction history available for you ";
 							} else {
 								output = output + " here is the list of transactions you have made \n";
-								for (Bill bill : bills) {
-									output = output + " " + bill.getName() + " bill paid on " + bill.getPaidOn() + " of amount: " + bill.getAmount()
-											+ " \n";
+								for (BankTransaction transaction : bankTransactions) {
 									JSONObject formDetailsJson = new JSONObject();
-							        formDetailsJson.put("billname", bill.getName());
-							        formDetailsJson.put("paidon", bill.getPaidOn());
-							        formDetailsJson.put("amount", bill.getAmount());
+							        formDetailsJson.put("billname", transaction.getDescription());
+							        formDetailsJson.put("paidon", transaction.getTimestamp().toGMTString());
+							        formDetailsJson.put("amount", transaction.getAmount());
+							        formDetailsJson.put("type", transaction.getType());
 							        jsonArray.add(formDetailsJson);
 								}
 							}
@@ -156,7 +166,8 @@ public class BotServiceImpl implements IBotService {
 								obj.put("accountBalance", balance);
 								
 							}
-						} else {
+						}
+						else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
 
@@ -258,7 +269,7 @@ public class BotServiceImpl implements IBotService {
 									output = output + ", I have paid the amount of " + bill2.getAmount() + " for your "
 											+ bill2.getName() + " bill.";
 									Account acc = walletService.withdrawFromAccount(wallet.getWalletId(),
-											account.getAccountNumber(), bill2.getAmount(), "WITHDRAW");
+											account.getAccountNumber(), bill2.getAmount(), "WITHDRAW", bill2.getName());
 									output = output + " Now you have " + acc.getBalance() + " in  your account.";
 								}
 								obj.put("resp", output);

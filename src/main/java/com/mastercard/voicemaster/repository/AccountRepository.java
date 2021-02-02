@@ -10,4 +10,7 @@ public interface AccountRepository extends CrudRepository<Account, Integer> {
 
     @Query("SELECT a FROM Account  a WHERE a.accountNumber=:accountNumber")
     Iterable<Account> findAccountByNumber(@Param("accountNumber") Integer accountNumber);
+    
+    @Query("SELECT a FROM Account  a WHERE a.accountHolder.userId=:userID")
+    Account findAccountByUserID(@Param("userID") Integer userID);
 }

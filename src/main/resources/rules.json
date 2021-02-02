@@ -11,5 +11,5 @@
 {"action":"BYE", "input":"bye bye", "output":"Bye Bye"},
 {"action":"ASK_ACCNT_BALANCE", "input":"show my account balance", "output":"Dear #user#"},
 {"action":"ADD_BALANCE", "input":"add \\d+ rupees to my account", "output":"Dear #user#"},
-{"action":"HISTORY", "input":"please show my transaction history","output":"dear #user#"}
+{"action":"HISTORY", "input":"show my transaction history","output":"dear #user#"}
 ]
