@@ -1,10 +1,13 @@
 package com.mastercard.voicemaster.services;
 
+import java.util.List;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.mastercard.voicemaster.dto.BillDTO;
+import com.mastercard.voicemaster.exception.BillException;
 import com.mastercard.voicemaster.models.Bill;
 import com.mastercard.voicemaster.repository.BillRepository;
 import com.mastercard.voicemaster.repository.CustomerRepository;
@@ -22,11 +25,16 @@ public class BillServiceImpl implements IBillService {
 	private ModelMapper modelMapper;
 
 	@Override
-	public Bill addBill(BillDTO billDto) {
+	public Bill addBill(BillDTO billDto) throws BillException {
 		Bill bill = modelMapper.map(billDto, Bill.class);
 		bill.setStatus("PENDING");
 		bill.setUser(customerRepo.findById(billDto.getUserId()).get());
+		Integer billMonth = billDto.getDueDate().getMonth().getValue();
+		List<Bill> dbBill = billRepo.findByUserIdAndMonth(billDto.getUserId(), billMonth);
+		if (dbBill.size() != 0) {
+			throw new BillException("Bill for " + bill.getName() + " is already exist for month of " + bill.getDueDate()
+					+ " date for user id " + bill.getUser().getUserId());
+		}
 		return billRepo.save(bill);
 	}
-
 }
