@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.mastercard.voicemaster.services.IBotService;
 
+import io.swagger.annotations.ApiOperation;
+
 @Controller
 @CrossOrigin(origins = "*")
 public class BotController {
@@ -37,6 +39,7 @@ public class BotController {
 	}
 	
 	@GetMapping("/bot/message/transactionhistory")
+	@ApiOperation(value = "This method is used to show transaction history of a user.", hidden = true)
 	@ResponseBody
 	public JSONObject getTransactionHistory(@RequestParam(value = "message") String message, HttpServletRequest request,
 			HttpServletResponse response) throws ParseException {
