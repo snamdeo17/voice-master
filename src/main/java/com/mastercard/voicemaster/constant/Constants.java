@@ -2,9 +2,9 @@ package com.mastercard.voicemaster.constant;
 
 public class Constants {
 
-    public static final String WITHDRAW = "withdraw";
-    public static final String DEPOSIT = "deposit";
-    public static final String TRANSFER = "transfer";
+    public static final String WITHDRAW = "Withdraw";
+    public static final String DEPOSIT = "Deposit";
+    public static final String TRANSFER = "Transfer";
     public static final String WITHDRAW_DESCRIPTION = "Withdrawn from account";
     public static final String FOR = " for ";
     public static final String PAYMENT = " bill payment";
