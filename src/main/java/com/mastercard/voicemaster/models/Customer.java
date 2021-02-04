@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.Email;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.istack.NotNull;
@@ -28,7 +29,8 @@ public class Customer implements Serializable {
 	private String fname;
 	private String lname;
 	@Column(unique = true)
-	@NotNull	
+	@NotNull
+	@Email(message = "Email should be in valid format")
 	private String email;
 	private String secretCode;
 

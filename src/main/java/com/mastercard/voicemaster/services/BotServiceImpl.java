@@ -104,6 +104,14 @@ public class BotServiceImpl implements IBotService {
 					obj.put("resp", rule.getOutput().replace("#date#", LocalDate.now().toString()));
 					break;
 				} else if (rule.getAction().equals("THANKYOU")) {
+					if (userId != null && !userId.isEmpty()) {
+						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
+						if (userOptional.isPresent()) {
+							float balance = getAccountBalance(userOptional.get(), userId);
+							obj.put("accountBalance", balance);
+							obj.put("userId", userId);
+						}
+					}
 					obj.put("resp", rule.getOutput());
 					break;
 				}
