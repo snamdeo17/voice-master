@@ -14,16 +14,21 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sun.istack.NotNull;
+
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 public class Customer implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@ApiModelProperty(required = false, hidden = true)
 	private int userId;
 	private String fname;
 	private String lname;
 	@Column(unique = true)
+	@NotNull	
 	private String email;
 	private String secretCode;
 

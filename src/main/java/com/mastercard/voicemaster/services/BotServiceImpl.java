@@ -84,10 +84,12 @@ public class BotServiceImpl implements IBotService {
 						Customer user = customerRepo.findBySecretCode(pin);
 						if (user != null) {
 							String output = rule.getOutput();
+							float balance = getAccountBalance(user, userId);
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
 							obj.put("resp", output);
-							obj.put("userId", user.getUserId());
+							obj.put("userId", user.getUserId());							
 							response.setHeader("userId", "" + user.getUserId());
+							obj.put("accountBalance", balance);
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
@@ -114,6 +116,7 @@ public class BotServiceImpl implements IBotService {
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
 							List<Bill> bills = billRepo.findByUserId(user.getUserId());
+							float balance = getAccountBalance(userOptional.get(), userId);
 							if (bills.isEmpty()) {
 								output = output + " There is no bill pending for you ";
 							} else {
@@ -125,6 +128,7 @@ public class BotServiceImpl implements IBotService {
 							}
 							obj.put("resp", output);	
 							obj.put("userId", userId);
+							obj.put("accountBalance", balance);
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
@@ -139,7 +143,7 @@ public class BotServiceImpl implements IBotService {
 							Customer user = userOptional.get();
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
-							float balance = getAccountBalance(userOptional, userId);
+							float balance = getAccountBalance(userOptional.get(), userId);
 							if (bankTransactions.isEmpty()) {
 								output = output + " There is no transaction history available for you ";
 							} else {
@@ -177,7 +181,7 @@ public class BotServiceImpl implements IBotService {
 							Customer user = userOptional.get();							
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
-							float balance = getAccountBalance(userOptional, userId);
+							float balance = getAccountBalance(userOptional.get(), userId);
 							if ( balance == 0) {
 								output = output + " your account balance is " + balance + ". Please add amount to your account";
 							} else {
@@ -259,7 +263,7 @@ public class BotServiceImpl implements IBotService {
 							Customer user = userOptional.get();
 							Wallet wallet = user.getWallet();
 							Account account = wallet.getAccountsInWallet().get(0);
-							float balance = getAccountBalance(userOptional, userId);
+							float balance = getAccountBalance(userOptional.get(), userId);
 							List<Bill> bill = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
 							if (bill.size() > 0) {
 								for (Bill bill2 : bill) {
@@ -304,10 +308,9 @@ public class BotServiceImpl implements IBotService {
 			return obj.toString();
 			}
 	
-	public float getAccountBalance(Optional<Customer> userOptional, String userId) {
-		float balance = 0;
-		Customer user = userOptional.get();
-		List<Account> accounts = user.getCustomerAccounts();
+	public float getAccountBalance(Customer customer, String userId) {
+		float balance = 0;		
+		List<Account> accounts = customer.getCustomerAccounts();
 		for (Account acnt : accounts) {
 			balance = balance + acnt.getBalance();
 		}
