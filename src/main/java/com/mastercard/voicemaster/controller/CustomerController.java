@@ -59,7 +59,7 @@ public class CustomerController {
     		return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
     	}    	
     	//Check if secret code is of 4 digit numeric
-    	if(secretCode.length() !=4  && !secretCode.matches("\\d{4}")) {    		
+    	if(secretCode.length() !=4  || !secretCode.matches("\\d{4}")) {    		
     		response.setDescription("Secret code should be 4 digit numeric");
     		response.setStatus(String.valueOf(HttpStatus.NOT_ACCEPTABLE));
     		return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
@@ -106,7 +106,7 @@ public class CustomerController {
 			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		}		
 		//Check if secret code is of 4 digit numeric
-    	if(secretCode.length() !=4  && !secretCode.matches("\\d{4}")) {    		
+    	if(secretCode.length() !=4  || !secretCode.matches("\\d{4}")) {    		
     		response.setDescription("Secret code should be 4 digit numeric");
     		response.setStatus(String.valueOf(HttpStatus.NOT_ACCEPTABLE));
     		return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
