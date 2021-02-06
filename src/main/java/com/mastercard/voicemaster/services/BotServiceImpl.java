@@ -40,15 +40,16 @@ public class BotServiceImpl implements IBotService {
 
 	@Autowired
 	private BankTansactionRepository bankTansactionRepository;
-	
+
 	@Autowired
 	private AccountRepository accountRepository;
-	
+
 	@Autowired
 	WalletService walletService;
 
 	@Value("${json.path}")
 	private String path;
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public JSONObject processMessageJSON(String message, HttpServletRequest request, HttpServletResponse response)
@@ -87,7 +88,7 @@ public class BotServiceImpl implements IBotService {
 							float balance = getAccountBalance(user, userId);
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
 							obj.put("resp", output);
-							obj.put("userId", user.getUserId());							
+							obj.put("userId", user.getUserId());
 							response.setHeader("userId", "" + user.getUserId());
 							obj.put("accountBalance", balance);
 						} else {
@@ -98,7 +99,17 @@ public class BotServiceImpl implements IBotService {
 				} else if (rule.getAction().equals("BYE")) {
 					obj.put("userId", "");
 					response.setHeader("userId", "");
-					obj.put("resp", rule.getOutput());
+					if (userId != null) {
+						String output = rule.getOutput();
+						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
+						if (userOptional.isPresent()) {
+							Customer user = userOptional.get();
+							output = output + " " + user.getFname() + " " + user.getLname();
+							obj.put("resp", output);
+						}
+					} else {
+						obj.put("resp", rule.getOutput());
+					}
 					break;
 				} else if (rule.getAction().equals("CURRENTDATE")) {
 					obj.put("resp", rule.getOutput().replace("#date#", LocalDate.now().toString()));
@@ -134,7 +145,7 @@ public class BotServiceImpl implements IBotService {
 											+ " with due date " + bill.getDueDate() + " <br/>";
 								}
 							}
-							obj.put("resp", output);	
+							obj.put("resp", output);
 							obj.put("userId", userId);
 							obj.put("accountBalance", balance);
 						} else {
@@ -142,12 +153,12 @@ public class BotServiceImpl implements IBotService {
 						}
 
 					} else if (rule.getAction().equals("HISTORY")) {
-					    JSONArray jsonArray = new JSONArray();
+						JSONArray jsonArray = new JSONArray();
 						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
 						Account account = accountRepository.findAccountByUserID(Integer.parseInt(userId));
-						if(account != null && userOptional.isPresent())
-						{
-							List<BankTransaction> bankTransactions = bankTansactionRepository.findTransactionHistoryByTransactionAcNumber(account.getAccountNumber());
+						if (account != null && userOptional.isPresent()) {
+							List<BankTransaction> bankTransactions = bankTansactionRepository
+									.findTransactionHistoryByTransactionAcNumber(account.getAccountNumber());
 							Customer user = userOptional.get();
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
@@ -158,76 +169,78 @@ public class BotServiceImpl implements IBotService {
 								output = output + " here is the list of transactions you have made \n";
 								for (BankTransaction transaction : bankTransactions) {
 									JSONObject formDetailsJson = new JSONObject();
-							        formDetailsJson.put("billname", transaction.getDescription());
-							        formDetailsJson.put("paidon", transaction.getTimestamp().toGMTString());
-							        formDetailsJson.put("amount", transaction.getAmount());
-							        formDetailsJson.put("type", transaction.getType());
-							        jsonArray.add(formDetailsJson);
+									formDetailsJson.put("billname", transaction.getDescription());
+									formDetailsJson.put("paidon", transaction.getTimestamp().toGMTString());
+									formDetailsJson.put("amount", transaction.getAmount());
+									formDetailsJson.put("type", transaction.getType());
+									jsonArray.add(formDetailsJson);
 								}
 							}
-							if(jsonArray.isEmpty()) 
-							{
+							if (jsonArray.isEmpty()) {
 								obj.put("resp", output);
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
-							}
-							else
-							{
+							} else {
 								obj.put("resp", jsonArray);
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
-								
+
 							}
-						}
-						else {
+						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
 
-					}else if (rule.getAction().equals("ASK_ACCNT_BALANCE")) {
+					} else if (rule.getAction().equals("ASK_ACCNT_BALANCE")) {
 						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
 						if (userOptional.isPresent()) {
-							Customer user = userOptional.get();							
+							Customer user = userOptional.get();
 							String output = rule.getOutput();
 							output = output.replace("#user#", user.getFname() + " " + user.getLname());
 							float balance = getAccountBalance(userOptional.get(), userId);
-							if ( balance == 0) {
-								output = output + " your account balance is " + balance + ". Please add amount to your account";
+							if (balance == 0) {
+								output = output + " your account balance is " + balance
+										+ ". Please add amount to your account";
 							} else {
-								output = output + " your account balance is " + balance ;
-								
+								output = output + " your account balance is " + balance;
+
 							}
 							obj.put("resp", output);
 							obj.put("userId", userId);
 							obj.put("accountBalance", balance);
 						} else {
-							obj.put("resp", "I don't have any matching secret code in database. Please provide valid secret code.");
+							obj.put("resp",
+									"I don't have any matching secret code in database. Please provide valid secret code.");
 						}
 
 					} else if (rule.getAction().equals("ADD_BALANCE")) {
 						Pattern p = Pattern.compile("add (\\d+) rupees");
 						Matcher m = p.matcher(message);
 						while (m.find()) {
-							Float balanceToAdd = Float.valueOf(m.group(1));							
+							Float balanceToAdd = Float.valueOf(m.group(1));
 							Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
-							if (userOptional.isPresent()) {							
+							if (userOptional.isPresent()) {
 								Customer user = userOptional.get();
 								Wallet wallet = user.getWallet();
 								Account account = wallet.getAccountsInWallet().get(0);
 								Float existingBalance = walletService.getAccountBalanceForCurrentWallet(
 										user.getWallet().getWalletId(), account.getAccountNumber());
-								
+
 								String output = rule.getOutput();
 								output = output.replace("#user#", user.getFname() + " " + user.getLname());
-								
-								Account acc = walletService.depositToAccount(wallet.getWalletId(), account.getAccountNumber(), balanceToAdd, "DEPOSIT");
-								
-								output = output +" "+ balanceToAdd +" rupees is added into your account. Your updated account balance is " +acc.getBalance() + " rupees.";
-								
+
+								Account acc = walletService.depositToAccount(wallet.getWalletId(),
+										account.getAccountNumber(), balanceToAdd, "DEPOSIT");
+
+								output = output + " " + balanceToAdd
+										+ " rupees is added into your account. Your updated account balance is "
+										+ acc.getBalance() + " rupees.";
+
 								obj.put("resp", output);
-								obj.put("userId", userId);								
+								obj.put("userId", userId);
 								obj.put("accountBalance", acc.getBalance());
 							} else {
-								obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
+								obj.put("resp",
+										"I don't have any matching code in my database. Please provide valid code");
 							}
 						}
 					} else if (rule.getAction().equals("BILLPAY")) {
@@ -308,16 +321,18 @@ public class BotServiceImpl implements IBotService {
 			}
 		}
 		return obj;
-	
+
 	}
+
 	@Override
 	public String processMessage(String message, HttpServletRequest request, HttpServletResponse response)
-			throws Exception {			JSONObject obj = processMessageJSON(message, request, response);
-			return obj.toString();
-			}
-	
+			throws Exception {
+		JSONObject obj = processMessageJSON(message, request, response);
+		return obj.toString();
+	}
+
 	public float getAccountBalance(Customer customer, String userId) {
-		float balance = 0;		
+		float balance = 0;
 		List<Account> accounts = customer.getCustomerAccounts();
 		for (Account acnt : accounts) {
 			balance = balance + acnt.getBalance();

@@ -1,7 +1,7 @@
 [
 
 {"action":"ASK_LIST", "input":"show my bills","output":"Dear #user#"},
-{"action":"PROVIDECODE", "input":"my code is \\d+", "output":"Thank you #user#. Now you can start with the payment commands"},
+{"action":"PROVIDECODE", "input":"my code is \\d+", "output":"Thank you #user#. How may I help you?"},
 {"action":"INIT", "input":"hello", "output":"Hello"},
 {"action":"THANKYOU", "input":"thank you", "output":"My pleasure"},
 {"action":"ALPHABET", "input":"teach me alphabets", "output":"Here it is, A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"},
