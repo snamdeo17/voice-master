@@ -24,7 +24,7 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
 	@Query("SELECT b FROM Bill b WHERE b.user.userId=:userId and b.status='PENDING' and b.requestPayment=true")
 	List<Bill> findByUserIdAndRequestPayment(@Param("userId") int userId);
 
-	@Query("SELECT b FROM Bill b WHERE b.user.userId=:userId and MONTH(b.dueDate) = :month")
-	List<Bill> findByUserIdAndMonth(@Param("userId") Integer userId, @Param("month") Integer month);
+	@Query("SELECT b FROM Bill b WHERE b.user.userId=:userId and MONTH(b.dueDate) = :month and b.name=:billName")
+	List<Bill> findByUserIdAndMonth(@Param("userId") Integer userId, @Param("month") Integer month, @Param("billName") String billName);
 
 }

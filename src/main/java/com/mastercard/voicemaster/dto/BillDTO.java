@@ -61,4 +61,9 @@ public class BillDTO {
 	public void setRequestPayment(Boolean requestPayment) {
 		this.requestPayment = requestPayment;
 	}
+	@Override
+	public String toString() {
+		return "BillDTO [id=" + id + ", userId=" + userId + ", name=" + name + ", amount=" + amount + ", status="
+				+ status + ", dueDate=" + dueDate + ", paidOn=" + paidOn + "]";
+	}
 }

@@ -3,6 +3,8 @@ package com.mastercard.voicemaster.services;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import com.mastercard.voicemaster.repository.CustomerRepository;
 
 @Service
 public class BillServiceImpl implements IBillService {
+
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	@Autowired
 	private BillRepository billRepo;
@@ -30,10 +34,12 @@ public class BillServiceImpl implements IBillService {
 		bill.setStatus("PENDING");
 		bill.setUser(customerRepo.findById(billDto.getUserId()).get());
 		Integer billMonth = billDto.getDueDate().getMonth().getValue();
-		List<Bill> dbBill = billRepo.findByUserIdAndMonth(billDto.getUserId(), billMonth);
+		List<Bill> dbBill = billRepo.findByUserIdAndMonth(billDto.getUserId(), billMonth, billDto.getName());
 		if (dbBill.size() != 0) {
-			throw new BillException("Bill for " + bill.getName() + " is already exist for month of " + bill.getDueDate()
-					+ " date for user id " + bill.getUser().getUserId());
+			String error = "Bill for " + bill.getName() + " is already exist for month of " + bill.getDueDate()
+					+ " date for user id " + bill.getUser().getUserId();
+			LOGGER.error(error);
+			throw new BillException(error);
 		}
 		return billRepo.save(bill);
 	}
