@@ -261,7 +261,7 @@ public class BotServiceImpl implements IBotService {
 								if (bill != null && bill.getStatus().equals("PENDING") && balance >= bill.getAmount()) {
 									res = res + " and you have enough balance for paying your " + billName
 											+ " bill of amount " + bill.getAmount()
-											+ " rupees. Should i proceed with the payment?";
+											+ " rupees. Should I proceed with the payment?";
 									bill.setRequestPayment(true);
 									billRepo.save(bill);
 								} else if (bill != null && bill.getStatus().equals("PENDING")
@@ -284,7 +284,7 @@ public class BotServiceImpl implements IBotService {
 							Customer user = userOptional.get();
 							Wallet wallet = user.getWallet();
 							Account account = wallet.getAccountsInWallet().get(0);
-							float balance = getAccountBalance(userOptional.get(), userId);
+							float balance = 0;
 							List<Bill> bill = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
 							if (bill.size() > 0) {
 								for (Bill bill2 : bill) {
@@ -296,6 +296,7 @@ public class BotServiceImpl implements IBotService {
 									Account acc = walletService.withdrawFromAccount(wallet.getWalletId(),
 											account.getAccountNumber(), bill2.getAmount(), "WITHDRAW", bill2.getName());
 									output = output + " Now you have " + acc.getBalance() + " in  your account.";
+									balance = acc.getBalance();
 								}
 								obj.put("resp", output);
 								obj.put("userId", userId);

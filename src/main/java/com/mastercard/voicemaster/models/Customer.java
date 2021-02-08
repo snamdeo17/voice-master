@@ -32,6 +32,7 @@ public class Customer implements Serializable {
 	@NotNull
 	@Email(message = "Email should be in valid format")
 	private String email;
+	@Column(unique = true)
 	private String secretCode;
 
 	@OneToOne(mappedBy = "walletOfCustomer")
