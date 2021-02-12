@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mastercard.voicemaster.exception.CustomerAlreadyHasWalletException;
+import com.mastercard.voicemaster.exception.CustomerDoesNotExistException;
+import com.mastercard.voicemaster.exception.VoiceMasterException;
 import com.mastercard.voicemaster.models.Account;
 import com.mastercard.voicemaster.models.Customer;
 import com.mastercard.voicemaster.models.ServiceResponse;
@@ -32,19 +35,13 @@ public class AccountController {
 	IAccountService accService;
 
 	@PostMapping("/api/account")
-	public ResponseEntity<ServiceResponse> createAccount(@RequestBody Account account) {
+	public ResponseEntity<ServiceResponse> createAccount(@RequestBody Account account) throws CustomerDoesNotExistException, CustomerAlreadyHasWalletException, VoiceMasterException {
 		 ServiceResponse response = new ServiceResponse();
-		try {
 			Account raccount = accService.createAccount(account);
 			response.setStatus("200");
             response.setDescription("Account created successfully!");
             response.setData(raccount);
             return new ResponseEntity<>(response, HttpStatus.OK);
-		} catch (Exception e) {
-			response.setStatus(String.valueOf(HttpStatus.EXPECTATION_FAILED));
-            response.setDescription(e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.EXPECTATION_FAILED);
-		}
 	}
 	
 	@GetMapping("/api/account/balance/{userId}")

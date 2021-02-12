@@ -14,6 +14,7 @@ import com.mastercard.voicemaster.exception.AccountNotAssociatedWithWalletExcept
 import com.mastercard.voicemaster.exception.CustomerAlreadyHasWalletException;
 import com.mastercard.voicemaster.exception.CustomerDoesNotExistException;
 import com.mastercard.voicemaster.exception.InsufficientBalanceInWalletException;
+import com.mastercard.voicemaster.exception.VoiceMasterException;
 import com.mastercard.voicemaster.exception.WalletIdDoesNotExistException;
 import com.mastercard.voicemaster.models.Account;
 import com.mastercard.voicemaster.models.BankTransaction;
@@ -30,26 +31,14 @@ public class WalletController {
 	// Create a new wallet for a user. Constraint : A user can have only one wallet
 	@PostMapping("/api/wallet/{customerId}")
 	public ResponseEntity<ServiceResponse> createWallet(@PathVariable("customerId") int customerId)
-			throws CustomerAlreadyHasWalletException {
+			throws CustomerAlreadyHasWalletException, VoiceMasterException {
 
 		ServiceResponse response = new ServiceResponse();
-
-		try {
 			Wallet newWallet = walletService.createWallet(customerId);
 			response.setStatus("200");
 			response.setDescription("Wallet created successfully!");
 			response.setData(newWallet);
 			return new ResponseEntity<>(response, HttpStatus.OK);
-
-		} catch (CustomerDoesNotExistException e) {
-			response.setStatus(String.valueOf(HttpStatus.NOT_FOUND));
-			response.setDescription(e.getMessage());
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-		} catch (CustomerAlreadyHasWalletException e) {
-			response.setStatus(String.valueOf(HttpStatus.EXPECTATION_FAILED));
-			response.setDescription(e.getMessage());
-			return new ResponseEntity<>(response, HttpStatus.EXPECTATION_FAILED);
-		}
 
 	}
 

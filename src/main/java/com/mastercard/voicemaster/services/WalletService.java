@@ -6,6 +6,7 @@ import com.mastercard.voicemaster.exception.AccountNotAssociatedWithWalletExcept
 import com.mastercard.voicemaster.exception.CustomerAlreadyHasWalletException;
 import com.mastercard.voicemaster.exception.CustomerDoesNotExistException;
 import com.mastercard.voicemaster.exception.InsufficientBalanceInWalletException;
+import com.mastercard.voicemaster.exception.VoiceMasterException;
 import com.mastercard.voicemaster.exception.WalletIdDoesNotExistException;
 import com.mastercard.voicemaster.models.Account;
 import com.mastercard.voicemaster.models.BankTransaction;
@@ -19,8 +20,9 @@ public interface WalletService {
      * @return : A newly created wallet object
      * @throws CustomerDoesNotExistException - if customer does not exist in the Customer table
      * @throws CustomerAlreadyHasWalletException - if customer already has a wallet. In our case one customer can only have one wallet
+     * @throws VoiceMasterException 
      */
-    public Wallet createWallet(Integer customerId) throws CustomerDoesNotExistException, CustomerAlreadyHasWalletException;
+    public Wallet createWallet(Integer customerId) throws VoiceMasterException;
 
     /**
      * Method to Return current account balance

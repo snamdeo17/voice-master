@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import com.mastercard.voicemaster.exception.AccountNotAssociatedWithWalletExcept
 import com.mastercard.voicemaster.exception.CustomerAlreadyHasWalletException;
 import com.mastercard.voicemaster.exception.CustomerDoesNotExistException;
 import com.mastercard.voicemaster.exception.InsufficientBalanceInWalletException;
+import com.mastercard.voicemaster.exception.VoiceMasterException;
 import com.mastercard.voicemaster.exception.WalletIdDoesNotExistException;
 import com.mastercard.voicemaster.models.Account;
 import com.mastercard.voicemaster.models.BankTransaction;
@@ -41,15 +43,15 @@ public class WalletServiceImpl implements WalletService {
 
 	@Override
 	public Wallet createWallet(Integer customerId)
-			throws CustomerDoesNotExistException, CustomerAlreadyHasWalletException {
+			throws VoiceMasterException {
 
 		Customer c = customerRepository.findById(customerId).orElse(null);
 
 		if (c == null) {
-			throw new CustomerDoesNotExistException(customerId);
+			throw new VoiceMasterException(HttpStatus.NOT_FOUND, "Customer with customer ID: "+customerId+" does not exist");
 		}
 		if (c.getWallet() != null) {
-			throw new CustomerAlreadyHasWalletException(c);
+			throw new VoiceMasterException(HttpStatus.EXPECTATION_FAILED, "Customer "+c.getFname()+" "+c.getLname()+" already owns a wallet : "+c.getWallet().getWalletId());
 		}
 
 		Wallet w = new Wallet();
