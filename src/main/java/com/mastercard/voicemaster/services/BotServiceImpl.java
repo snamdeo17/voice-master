@@ -127,8 +127,10 @@ public class BotServiceImpl implements IBotService {
 					break;
 				}
 
+				//Code change for defect - show table on UI with details of bills and speak out only bill names
 				if (userId != null && !userId.isEmpty()) {
 					if (rule.getAction().equals("ASK_LIST")) {
+						JSONArray jsonArray = new JSONArray();
 						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
 						if (userOptional.isPresent()) {
 							Customer user = userOptional.get();
@@ -139,15 +141,30 @@ public class BotServiceImpl implements IBotService {
 							if (bills.isEmpty()) {
 								output = output + " There is no bill pending for you ";
 							} else {
-								output = output + " here is the list of pending items: <br/><br/>";
+								output = output + "The Pending bills list include: ";
 								for (Bill bill : bills) {
-									output = output + " " + bill.getName() + " bill of amount " + bill.getAmount()
-											+ " with due date " + bill.getDueDate() + " <br/>";
+									JSONObject formDetailsJson = new JSONObject();
+									if(bill.getStatus()!=null && bill.getStatus().equalsIgnoreCase("Pending")) {
+									formDetailsJson.put("pendingBillName", bill.getName());
+									formDetailsJson.put("billAmount", bill.getAmount());
+									formDetailsJson.put("billDueDate", bill.getDueDate().getDayOfMonth() +"-"+ bill.getDueDate().getMonth() +"-"+ bill.getDueDate().getYear());
+									jsonArray.add(formDetailsJson);
+									output = output + bill.getName() + "-";
+									}
 								}
 							}
-							obj.put("resp", output);
-							obj.put("userId", userId);
-							obj.put("accountBalance", balance);
+							if (jsonArray.isEmpty()) {
+								// zero pending bills
+								obj.put("resp", output);
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);
+							}else {
+								// if bills size > 0
+								obj.put("pendingBill", output);
+								obj.put("resp", jsonArray);
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);	
+							}
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}

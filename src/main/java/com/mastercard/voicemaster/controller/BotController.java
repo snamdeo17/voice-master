@@ -52,4 +52,20 @@ public class BotController {
 		}
 		return resp;
 	}
+	
+     @GetMapping("/bot/message/pendingbill")
+     @ApiOperation(value = "This method is used to show the bill details",hidden= true)
+     @ResponseBody
+     public JSONObject getPendingBills(@RequestParam(value = "message") String message, HttpServletRequest request,
+ 			HttpServletResponse response) throws ParseException {
+
+ 		JSONObject resp = null;
+ 		try {
+ 			resp = botService.processMessageJSON(message, request, response);
+ 		} catch (Exception e) {
+ 			e.printStackTrace();
+ 		}
+ 		return resp;
+ 	}
+
 }
