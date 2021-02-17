@@ -39,7 +39,7 @@ public class AccountServiceImpl implements IAccountService {
 			throw new VoiceMasterException(HttpStatus.EXPECTATION_FAILED,"Account is already associated with User");
 		}
 		Optional<Customer> opCustomer = customerRepository.findById(account.getAccountHolder().getUserId());
-		if(opCustomer.isEmpty()) {
+		if(opCustomer.isPresent()) {
 			throw new VoiceMasterException(HttpStatus.NOT_FOUND, "Customer with customer ID: "+account.getAccountHolder().getUserId()+" does not exist");
 		}
 		account.setAccountHolder(opCustomer.get());
