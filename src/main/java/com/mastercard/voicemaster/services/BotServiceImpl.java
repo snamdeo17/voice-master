@@ -135,13 +135,13 @@ public class BotServiceImpl implements IBotService {
 						if (userOptional.isPresent()) {
 							Customer user = userOptional.get();
 							String output = rule.getOutput();
-							output = output.replace("#user#", user.getFname() + " " + user.getLname());
+							output = output.replace("#user#", user.getFname() + " " + user.getLname() + ".");
 							List<Bill> bills = billRepo.findByUserId(user.getUserId());
 							float balance = getAccountBalance(userOptional.get(), userId);
 							if (bills.isEmpty()) {
 								output = output + " There is no bill pending for you ";
 							} else {
-								output = output + "The Pending bills list include: ";
+								output = output + " You have " + bills.size() + " pending bills. ";
 								for (Bill bill : bills) {
 									JSONObject formDetailsJson = new JSONObject();
 									if(bill.getStatus()!=null && bill.getStatus().equalsIgnoreCase("Pending")) {
@@ -149,7 +149,8 @@ public class BotServiceImpl implements IBotService {
 									formDetailsJson.put("billAmount", bill.getAmount());
 									formDetailsJson.put("billDueDate", bill.getDueDate().getDayOfMonth() +"-"+ bill.getDueDate().getMonth() +"-"+ bill.getDueDate().getYear());
 									jsonArray.add(formDetailsJson);
-									output = output + bill.getName() + "-";
+									output = output + bill.getName() + ",";
+									
 									}
 								}
 							}
