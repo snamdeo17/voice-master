@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +23,7 @@ import com.mastercard.voicemaster.models.ServiceResponse;
 import com.mastercard.voicemaster.repository.CustomerRepository;
 
 @RestController
+@CrossOrigin(origins = "*")
 public class CustomerController {
 
     @Autowired
@@ -49,7 +51,7 @@ public class CustomerController {
     public ResponseEntity<ServiceResponse> createCustomer(@Valid @RequestBody Customer customer) {   
     	ServiceResponse response = new ServiceResponse();    	    	
     	String email = customer.getEmail(); 
-    	String secretCode = customer.getSecretCode().trim();
+    	String secretCode = customer.getSecretCode() != null ? customer.getSecretCode().trim() : customer.getSecretCode();
     	String emailMatcher = "[A-Za-z0-9._%-+]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}";
     	
     	//Check if request body contains user id
@@ -69,6 +71,7 @@ public class CustomerController {
     	if(customers.size() > 0 ) {    		
     		response.setDescription("Email id is already present in system");
     		response.setStatus(String.valueOf(HttpStatus.NOT_ACCEPTABLE));
+    		response.setData(customers.get(0));
     		return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
     	} 
     	//Check if secret code exists in system
