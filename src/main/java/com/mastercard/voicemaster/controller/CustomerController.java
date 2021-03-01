@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,9 +19,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mastercard.voicemaster.models.Account;
 import com.mastercard.voicemaster.models.Customer;
 import com.mastercard.voicemaster.models.ServiceResponse;
+import com.mastercard.voicemaster.models.Wallet;
+import com.mastercard.voicemaster.repository.AccountRepository;
 import com.mastercard.voicemaster.repository.CustomerRepository;
+import com.mastercard.voicemaster.repository.WalletRepository;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -28,6 +33,12 @@ public class CustomerController {
 
     @Autowired
     CustomerRepository customerRepository;
+
+    @Autowired
+    WalletRepository walletRepository;
+    
+    @Autowired
+    AccountRepository accountRepository;
 
     @GetMapping("/api/customer")
     public List<Customer> findAllCustomers(
@@ -48,10 +59,13 @@ public class CustomerController {
 
 
     @PostMapping("/api/customer")
+    @Transactional
     public ResponseEntity<ServiceResponse> createCustomer(@Valid @RequestBody Customer customer) {   
     	ServiceResponse response = new ServiceResponse();    	    	
     	String email = customer.getEmail(); 
     	String secretCode = customer.getSecretCode() != null ? customer.getSecretCode().trim() : customer.getSecretCode();
+    	String firstName = customer.getFname();
+    	String lastName = customer.getLname();
     	String emailMatcher = "[A-Za-z0-9._%-+]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}";
     	
     	//Check if request body contains user id
@@ -60,6 +74,11 @@ public class CustomerController {
     		response.setStatus(String.valueOf(HttpStatus.NOT_ACCEPTABLE));
     		return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
     	}    	
+    	if(firstName == null || lastName == null || firstName.isEmpty()  || lastName.isEmpty()) {    		
+    		response.setDescription("First Name and Last name of user should not be blank");
+    		response.setStatus(String.valueOf(HttpStatus.NOT_ACCEPTABLE));
+    		return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
+    	}
     	//Check if secret code is of 4 digit numeric
     	if(secretCode.length() !=4  || !secretCode.matches("\\d{4}")) {    		
     		response.setDescription("Secret code should be 4 digit numeric");
@@ -89,10 +108,33 @@ public class CustomerController {
     		return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
     	} 
     	
-        Customer addedUser = customerRepository.save(customer);   
-        response.setStatus(String.valueOf(HttpStatus.OK));
-        response.setDescription("User added successfully with userId: "+addedUser.getUserId());        
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    	try
+    	{
+    		Customer addedUser = customerRepository.save(customer);   
+	        
+	        // Create new wallet of customer
+	        Wallet wallet = new Wallet();
+	        wallet.setWalletId(addedUser.getUserId());
+	        wallet.setWalletOfCustomer(addedUser);
+	        Wallet addedWallet = walletRepository.save(wallet);
+	        
+	        // Create new account of customer
+	        Account account = new Account();
+	        account.setBalance(0);
+	        account.setWalletHolder(addedWallet);
+	        account.setAccountHolder(addedUser);
+	        accountRepository.save(account);
+	        
+	        response.setStatus(String.valueOf(HttpStatus.OK));
+	        response.setDescription("User added successfully with userId: "+addedUser.getUserId());        
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+    	}
+    	catch(Exception e)
+    	{
+    		response.setDescription("Error while registering new user");
+    		response.setStatus(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR));
+    		return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    	}
     }
     
 	@PutMapping("/api/customer/{userId}")
