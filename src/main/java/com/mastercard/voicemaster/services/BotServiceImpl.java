@@ -64,6 +64,7 @@ public class BotServiceImpl implements IBotService {
 		for (RuleDTO rule : rules) {
 			if (message.matches(rule.getInput())) {
 				String userId = request.getHeader("userId");
+				Boolean isVoiceAuthenticated = Boolean.parseBoolean(request.getHeader("isVoiceAuthenticated"));
 				if (rule.getAction().equals("INIT")) {
 					if (userId != null) {
 						String output = rule.getOutput();
@@ -128,7 +129,7 @@ public class BotServiceImpl implements IBotService {
 				}
 
 				//Code change for defect - show table on UI with details of bills and speak out only bill names
-				if (userId != null && !userId.isEmpty()) {
+				if (userId != null && !userId.isEmpty() && isVoiceAuthenticated) {
 					if (rule.getAction().equals("ASK_LIST")) {
 						JSONArray jsonArray = new JSONArray();
 						Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
