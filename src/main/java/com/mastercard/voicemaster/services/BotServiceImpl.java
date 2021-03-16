@@ -87,7 +87,7 @@ public class BotServiceImpl implements IBotService {
 						if (user != null) {
 							String output = rule.getOutput();
 							float balance = getAccountBalance(user, userId);
-							output = output.replace("#user#", user.getFname() + " " + user.getLname());
+							output = output.replace("#user#","user");
 							obj.put("resp", output);
 							obj.put("userId", user.getUserId());
 							response.setHeader("userId", "" + user.getUserId());
