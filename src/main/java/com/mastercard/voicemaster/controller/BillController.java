@@ -82,7 +82,7 @@ public class BillController {
 	
 	@PostMapping("/api/bill/createConsumerUserMap")
     public ResponseEntity<ServiceResponse> createConsumerUserMapRecord(@RequestBody ConsumerUserMap consumerUserMap) {
-		
+		ServiceResponse response = new ServiceResponse();
 		System.out.println("UserId and Type: "+consumerUserMap.getUserId()+" : "+ consumerUserMap.getType());
 		String consumerId = consumerUserMapRepository.findCustomerIdByUserIdAndType(consumerUserMap.getType());
 		ConsumerUserMap consumerUserMapSave = new ConsumerUserMap();
@@ -105,8 +105,9 @@ public class BillController {
 		
 		consumerUserMapRepository.save(consumerUserMapSave);
 		
-		System.out.println("************CONSUMER ID: "+consumerId);
-		return null;
+		response.setStatus(String.valueOf(HttpStatus.OK));
+		response.setDescription("New Customer ID Added successfully");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 		
 	}
 	
