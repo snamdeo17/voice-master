@@ -2,12 +2,15 @@ package com.mastercard.voicemaster.controller;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mastercard.voicemaster.dto.BillDTO;
 import com.mastercard.voicemaster.exception.BillException;
 import com.mastercard.voicemaster.models.Bill;
+import com.mastercard.voicemaster.models.ConsumerUserMap;
 import com.mastercard.voicemaster.models.Customer;
 import com.mastercard.voicemaster.models.ServiceResponse;
 import com.mastercard.voicemaster.repository.BillRepository;
+import com.mastercard.voicemaster.repository.ConsumerUserMapRepository;
 import com.mastercard.voicemaster.services.IBillService;
 
 @RestController
@@ -37,6 +42,9 @@ public class BillController {
 	
 	@Autowired
 	BillRepository billRepository;
+	
+	@Autowired
+	ConsumerUserMapRepository consumerUserMapRepository;
 
 	@PostMapping("/api/bill")
 	@ResponseBody
@@ -70,4 +78,37 @@ public class BillController {
 
         return billRepository.findByUserId(id);
     }
+	
+	
+	@PostMapping("/api/bill/createConsumerUserMap")
+    public ResponseEntity<ServiceResponse> createConsumerUserMapRecord(@RequestBody ConsumerUserMap consumerUserMap) {
+		
+		System.out.println("UserId and Type: "+consumerUserMap.getUserId()+" : "+ consumerUserMap.getType());
+		String consumerId = consumerUserMapRepository.findCustomerIdByUserIdAndType(consumerUserMap.getType());
+		ConsumerUserMap consumerUserMapSave = new ConsumerUserMap();
+		
+		consumerUserMapSave.setUserId(consumerUserMap.getUserId());
+		consumerUserMapSave.setType(consumerUserMap.getType());
+		
+		if(null==consumerId) {
+			if(consumerUserMap.getType().equalsIgnoreCase("Water")) {
+				consumerUserMapSave.setConsumerId(1000);
+			} else if(consumerUserMap.getType().equalsIgnoreCase("Electricity")) {
+				consumerUserMapSave.setConsumerId(5000);
+			} else if(consumerUserMap.getType().equalsIgnoreCase("Gas")) {
+				consumerUserMapSave.setConsumerId(10000); 
+			}
+		} else {
+			int consumId = Integer.parseInt(consumerId)+1;
+			consumerUserMapSave.setConsumerId(consumId);
+		}
+		
+		consumerUserMapRepository.save(consumerUserMapSave);
+		
+		System.out.println("************CONSUMER ID: "+consumerId);
+		return null;
+		
+	}
+	
+	
 }
