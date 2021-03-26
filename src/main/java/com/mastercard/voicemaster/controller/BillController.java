@@ -1,21 +1,32 @@
 package com.mastercard.voicemaster.controller;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.mastercard.voicemaster.dto.BillDTO;
 import com.mastercard.voicemaster.exception.BillException;
 import com.mastercard.voicemaster.models.Bill;
+import com.mastercard.voicemaster.models.Customer;
 import com.mastercard.voicemaster.models.ServiceResponse;
+import com.mastercard.voicemaster.repository.BillRepository;
 import com.mastercard.voicemaster.services.IBillService;
 
+@RestController
+@CrossOrigin(origins = "*")
 @Controller
 public class BillController {
 
@@ -23,6 +34,9 @@ public class BillController {
 
 	@Autowired
 	private IBillService billService;
+	
+	@Autowired
+	BillRepository billRepository;
 
 	@PostMapping("/api/bill")
 	@ResponseBody
@@ -43,4 +57,17 @@ public class BillController {
 			return new ResponseEntity<>(response, HttpStatus.EXPECTATION_FAILED);
 		}
 	}
+	
+	
+	@GetMapping("/api/bill")
+    public List<Bill> findAllBills() {
+        return (List<Bill>)billRepository.findAll();
+    }
+	
+	
+	@GetMapping("/api/bill/{id}")
+    public List<Bill> findCustomerById(@PathVariable("id") int id) {
+
+        return billRepository.findByUserId(id);
+    }
 }
