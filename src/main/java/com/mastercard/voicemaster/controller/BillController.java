@@ -112,4 +112,12 @@ public class BillController {
 	}
 	
 	
+	@GetMapping("/api/bill/createConsumerUserMap/{userId}")
+    public List<ConsumerUserMap> getAllConsumerDetailsById(@PathVariable("userId") int id) {
+
+		List<ConsumerUserMap> cosumerMapListObj = consumerUserMapRepository.findByUserId(id);
+		return cosumerMapListObj;
+    }
+	
+	
 }

@@ -13,6 +13,9 @@ public interface ConsumerUserMapRepository extends CrudRepository<ConsumerUserMa
 	
 	@Query("SELECT MAX(c.consumerId) FROM ConsumerUserMap c WHERE c.type=:type")
     String findCustomerIdByUserIdAndType(@Param ("type") String type);
+	
+	@Query("SELECT c FROM ConsumerUserMap c WHERE c.userId=:userId")
+	List<ConsumerUserMap> findByUserId(@Param("userId") int userId);
 
 	
 	/*
