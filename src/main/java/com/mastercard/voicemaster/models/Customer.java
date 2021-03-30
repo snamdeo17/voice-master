@@ -34,6 +34,8 @@ public class Customer implements Serializable {
 	private String email;
 	@Column(unique = true)
 	private String secretCode;
+	
+	private String phrase;
 
 	@OneToOne(mappedBy = "walletOfCustomer")
 	@JsonIgnore
@@ -110,5 +112,13 @@ public class Customer implements Serializable {
 
 	public void setSecretCode(String secretCode) {
 		this.secretCode = secretCode;
+	}
+
+	public String getPhrase() {
+		return phrase;
+	}
+
+	public void setPhrase(String phrase) {
+		this.phrase = phrase;
 	}
 }
