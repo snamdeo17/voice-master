@@ -151,6 +151,7 @@ public class BotServiceImpl implements IBotService {
 										formDetailsJson.put("billAmount", bill.getAmount());
 										formDetailsJson.put("billDueDate", bill.getDueDate().getDayOfMonth() + "-"
 												+ bill.getDueDate().getMonth() + "-" + bill.getDueDate().getYear());
+										formDetailsJson.put("consumerId", bill.getConsumerId());
 										jsonArray.add(formDetailsJson);
 										output = output + bill.getName() + "-";
 									}
