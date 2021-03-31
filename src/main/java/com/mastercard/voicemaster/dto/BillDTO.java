@@ -13,6 +13,16 @@ public class BillDTO {
 	private LocalDate dueDate;
 	private LocalDate paidOn;
 	private Boolean requestPayment;
+	private Integer consumerId;
+	
+	public Integer getConsumerId() {
+		return consumerId;
+	}
+
+	public void setConsumerId(Integer consumerId) {
+		this.consumerId = consumerId;
+	}
+	
 	public Long getId() {
 		return id;
 	}
