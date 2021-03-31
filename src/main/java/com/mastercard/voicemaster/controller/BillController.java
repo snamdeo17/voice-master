@@ -106,7 +106,7 @@ public class BillController {
 		consumerUserMapRepository.save(consumerUserMapSave);
 		
 		response.setStatus(String.valueOf(HttpStatus.OK));
-		response.setDescription("New Customer ID Added successfully");
+		response.setDescription("New Consumer ID Added successfully");
 		return new ResponseEntity<>(response, HttpStatus.OK);
 		
 	}
