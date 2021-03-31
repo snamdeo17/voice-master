@@ -90,6 +90,7 @@ public class BotServiceImpl implements IBotService {
 							output = output.replace("#user#", "user");
 							obj.put("resp", output);
 							obj.put("userId", user.getUserId());
+							obj.put("phrase", user.getPhrase());
 							response.setHeader("userId", "" + user.getUserId());
 							obj.put("accountBalance", balance);
 						} else {
