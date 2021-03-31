@@ -87,7 +87,7 @@ public class BotServiceImpl implements IBotService {
 						if (user != null) {
 							String output = rule.getOutput();
 							float balance = getAccountBalance(user, userId);
-							output = output.replace("#user#","user");
+							output = output.replace("#user#", "user");
 							obj.put("resp", output);
 							obj.put("userId", user.getUserId());
 							response.setHeader("userId", "" + user.getUserId());
@@ -128,7 +128,8 @@ public class BotServiceImpl implements IBotService {
 					break;
 				}
 
-				//Code change for defect - show table on UI with details of bills and speak out only bill names
+				// Code change for defect - show table on UI with details of bills and speak out
+				// only bill names
 				if (userId != null && !userId.isEmpty() && isVoiceAuthenticated) {
 					if (rule.getAction().equals("ASK_LIST")) {
 						JSONArray jsonArray = new JSONArray();
@@ -145,12 +146,13 @@ public class BotServiceImpl implements IBotService {
 								output = output + "The Pending bills list include: ";
 								for (Bill bill : bills) {
 									JSONObject formDetailsJson = new JSONObject();
-									if(bill.getStatus()!=null && bill.getStatus().equalsIgnoreCase("Pending")) {
-									formDetailsJson.put("pendingBillName", bill.getName());
-									formDetailsJson.put("billAmount", bill.getAmount());
-									formDetailsJson.put("billDueDate", bill.getDueDate().getDayOfMonth() +"-"+ bill.getDueDate().getMonth() +"-"+ bill.getDueDate().getYear());
-									jsonArray.add(formDetailsJson);
-									output = output + bill.getName() + "-";
+									if (bill.getStatus() != null && bill.getStatus().equalsIgnoreCase("Pending")) {
+										formDetailsJson.put("pendingBillName", bill.getName());
+										formDetailsJson.put("billAmount", bill.getAmount());
+										formDetailsJson.put("billDueDate", bill.getDueDate().getDayOfMonth() + "-"
+												+ bill.getDueDate().getMonth() + "-" + bill.getDueDate().getYear());
+										jsonArray.add(formDetailsJson);
+										output = output + bill.getName() + "-";
 									}
 								}
 							}
@@ -159,12 +161,12 @@ public class BotServiceImpl implements IBotService {
 								obj.put("resp", output);
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
-							}else {
+							} else {
 								// if bills size > 0
 								obj.put("pendingBill", output);
 								obj.put("resp", jsonArray);
 								obj.put("userId", userId);
-								obj.put("accountBalance", balance);	
+								obj.put("accountBalance", balance);
 							}
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
@@ -262,7 +264,7 @@ public class BotServiceImpl implements IBotService {
 							}
 						}
 					} else if (rule.getAction().equals("BILLPAY")) {
-						Pattern p = Pattern.compile("my (\\w+) bill");
+						Pattern p = Pattern.compile("my all (\\w+) bills");
 						Matcher m = p.matcher(message);
 						while (m.find()) {
 							String billName = m.group(1);
@@ -275,19 +277,133 @@ public class BotServiceImpl implements IBotService {
 								Float balance = walletService.getAccountBalanceForCurrentWallet(
 										user.getWallet().getWalletId(), account.getAccountNumber());
 								res = res.replace("#amount#", balance.toString());
-								Bill bill = billRepo.findByUserIdAndBillName(user.getUserId(), billName);
+								List<Bill> bills = billRepo.findByUserIdAndBillName(user.getUserId(), billName);
+								Float totalBill = 0f;
+								for (Bill bill : bills) {
+									if (bill != null && bill.getStatus().equals("PENDING")) {
+										totalBill += bill.getAmount();
+									}
+								}
+								if (balance >= totalBill) {
+									res = res + " and you have enough balance for paying your all " + billName
+											+ " bills of amount " + totalBill
+											+ " rupees. Should I proceed with the payment?";
+									for (Bill bill : bills) {
+										if (bill != null && bill.getStatus().equals("PENDING")) {
+											bill.setRequestPayment(true);
+										}
+									}
+									billRepo.saveAll(bills);
+
+								} else if (balance < totalBill) {
+									res = res + "You don't have enough money in your account for paying " + billName
+											+ " bill";
+								} else {
+									res = res + "There is no pending bill found for " + billName;
+								}
+								obj.put("resp", res);
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);
+							}
+						}
+
+					} else if (rule.getAction().equals("SINGLE_BILLPAY")) {
+						Pattern p = Pattern.compile("my (\\w+) bill");
+						Matcher m = p.matcher(message);
+						JSONArray jsonArray = new JSONArray();
+						while (m.find()) {
+							String billName = m.group(1);
+							String res = rule.getOutput();
+							Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
+							if (userOptional.isPresent()) {
+								Customer user = userOptional.get();
+								Wallet wallet = user.getWallet();
+								Account account = wallet.getAccountsInWallet().get(0);
+								Float balance = walletService.getAccountBalanceForCurrentWallet(
+										user.getWallet().getWalletId(), account.getAccountNumber());
+								res = res.replace("#amount#", balance.toString());
+								List<Bill> bills = billRepo.findByUserIdAndBillName(user.getUserId(), billName);
+
+								if (!bills.isEmpty() && bills.size() == 1) {
+									Bill bill = bills.get(0);
+									if (bill != null && bill.getStatus().equals("PENDING")
+											&& balance >= bill.getAmount()) {
+										res = res + " and you have enough balance for paying your " + bill.getName()
+												+ " bill of amount " + bill.getAmount()
+												+ " rupees. Should I proceed with the payment?";
+										bill.setRequestPayment(true);
+										billRepo.save(bill);
+									} else if (bill != null && bill.getStatus().equals("PENDING")
+											&& balance < bill.getAmount()) {
+										res = res + "You don't have enough money in your account for paying " + billName
+												+ " bill";
+									}
+									obj.put("resp", res);
+
+								} else if (!bills.isEmpty() && bills.size() > 1) {
+
+									res = res + " You have " + bills.size() + " pending " + billName + " bills. ";
+									for (Bill bill : bills) {
+										JSONObject formDetailsJson = new JSONObject();
+										if (bill.getStatus() != null && bill.getStatus().equalsIgnoreCase("Pending")) {
+											formDetailsJson.put("pendingBillName", bill.getName());
+											formDetailsJson.put("billAmount", bill.getAmount());
+											formDetailsJson.put("billDueDate", bill.getDueDate().getDayOfMonth() + "-"
+													+ bill.getDueDate().getMonth() + "-" + bill.getDueDate().getYear());
+											formDetailsJson.put("consumerId", bill.getConsumerId());
+											jsonArray.add(formDetailsJson);
+											res = res + bill.getName() + ",";
+
+										}
+									}
+
+									// if bills size > 0
+									obj.put("pendingBill", res);
+									obj.put("resp", jsonArray);
+									obj.put("userId", userId);
+									obj.put("accountBalance", balance);
+
+								} else {
+									res = res + "There is no pending bill found for " + billName;
+									obj.put("resp", res);
+								}
+
+								obj.put("userId", userId);
+								obj.put("accountBalance", balance);
+							}
+						}
+
+					} else if (rule.getAction().equals("BILLPAY_WITHID")) {
+						System.out.println("Inside");
+						Pattern p = Pattern.compile("my (\\w+) bill with consumer number (\\d+)");
+						Matcher m = p.matcher(message);
+						while (m.find()) {
+							String billName = m.group(1);
+							Integer consumerId = Integer.valueOf(m.group(2));
+							String res = rule.getOutput();
+							Optional<Customer> userOptional = customerRepo.findById(Integer.parseInt(userId));
+							if (userOptional.isPresent()) {
+								Customer user = userOptional.get();
+								Wallet wallet = user.getWallet();
+								Account account = wallet.getAccountsInWallet().get(0);
+								Float balance = walletService.getAccountBalanceForCurrentWallet(
+										user.getWallet().getWalletId(), account.getAccountNumber());
+								res = res.replace("#amount#", balance.toString());
+								Bill bill = billRepo.findByUserIdAndBillNameAndConsumerId(user.getUserId(), billName,
+										consumerId);
 								if (bill != null && bill.getStatus().equals("PENDING") && balance >= bill.getAmount()) {
-									res = res + " and you have enough balance for paying your " + billName
-											+ " bill of amount " + bill.getAmount()
+									res = res + " and you have enough balance for paying your " + bill.getName()
+											+ " bill with consumer ID " + consumerId + "  of amount " + bill.getAmount()
 											+ " rupees. Should I proceed with the payment?";
 									bill.setRequestPayment(true);
 									billRepo.save(bill);
 								} else if (bill != null && bill.getStatus().equals("PENDING")
 										&& balance < bill.getAmount()) {
 									res = res + "You don't have enough money in your account for paying " + billName
-											+ " bill";
+											+ " bill with consumer Id " + consumerId;
 								} else {
-									res = res + "There is no pending bill found for " + billName;
+									res = res + "There is no pending bill found for " + billName + " with consumer ID "
+											+ consumerId;
 								}
 								obj.put("resp", res);
 								obj.put("userId", userId);
@@ -303,19 +419,32 @@ public class BotServiceImpl implements IBotService {
 							Wallet wallet = user.getWallet();
 							Account account = wallet.getAccountsInWallet().get(0);
 							float balance = 0;
-							List<Bill> bill = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
-							if (bill.size() > 0) {
-								for (Bill bill2 : bill) {
-									bill2.setStatus("PAID");
-									bill2.setPaidOn(LocalDate.now());
-									billRepo.save(bill2);
-									output = output + ", I have paid the amount of " + bill2.getAmount() + " for your "
-											+ bill2.getName() + " bill.";
-									Account acc = walletService.withdrawFromAccount(wallet.getWalletId(),
-											account.getAccountNumber(), bill2.getAmount(), "WITHDRAW", bill2.getName());
-									output = output + " Now you have " + acc.getBalance() + " in  your account.";
-									balance = acc.getBalance();
+							List<Bill> bills = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
+							if (!bills.isEmpty()) {
+								Float totalAmount = 0f;
+								String billName = "";
+								Integer sid = 0;
+								for (Bill bill : bills) {
+									bill.setStatus("PAID");
+									bill.setPaidOn(LocalDate.now());
+									totalAmount += bill.getAmount();
+									billName = bill.getName();
+									sid = bill.getConsumerId();
 								}
+								billRepo.saveAll(bills);
+								if (bills.size() == 1) {
+									output = output + ", I have paid the amount of " + totalAmount + " for your "
+											+ billName + " bill with Consumer ID" + sid;
+								} else {
+									output = output + ", I have paid the amount of " + totalAmount + " for your "
+											+ billName + " bills.";
+								}
+
+								Account acc = walletService.withdrawFromAccount(wallet.getWalletId(),
+										account.getAccountNumber(), totalAmount, "WITHDRAW", billName);
+								output = output + " Now you have " + acc.getBalance() + " in  your account.";
+								balance = acc.getBalance();
+
 								obj.put("resp", output);
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
