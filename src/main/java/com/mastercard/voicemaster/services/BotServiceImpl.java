@@ -2,7 +2,9 @@ package com.mastercard.voicemaster.services;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -145,6 +147,7 @@ public class BotServiceImpl implements IBotService {
 								output = output + " There is no bill pending for you ";
 							} else {
 								output = output + "The Pending bills list include: ";
+								Map<String, Integer> billCount = new HashMap<>();
 								for (Bill bill : bills) {
 									JSONObject formDetailsJson = new JSONObject();
 									if (bill.getStatus() != null && bill.getStatus().equalsIgnoreCase("Pending")) {
@@ -154,8 +157,17 @@ public class BotServiceImpl implements IBotService {
 												+ bill.getDueDate().getMonth() + "-" + bill.getDueDate().getYear());
 										formDetailsJson.put("consumerId", bill.getConsumerId());
 										jsonArray.add(formDetailsJson);
-										output = output + bill.getName() + "-";
+										String billName = bill.getName().trim();
+										if (null != billCount.get(billName)) {
+											billCount.put(billName, (billCount.get(billName)+1));
+										} else {
+											billCount.put(billName, 1);
+										}
+																			
 									}
+								}
+								for(String key : billCount.keySet()) {
+									output = output + billCount.get(key) + " " + key + ((billCount.get(key)==1)? " bill" : " bills");
 								}
 							}
 							if (jsonArray.isEmpty()) {
