@@ -376,7 +376,6 @@ public class BotServiceImpl implements IBotService {
 						}
 
 					} else if (rule.getAction().equals("BILLPAY_WITHID")) {
-						System.out.println("Inside");
 						Pattern p = Pattern.compile("my (\\w+) bill with consumer number (\\d+)");
 						Matcher m = p.matcher(message);
 						while (m.find()) {
