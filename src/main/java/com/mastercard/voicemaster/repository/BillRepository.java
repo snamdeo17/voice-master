@@ -10,8 +10,11 @@ import com.mastercard.voicemaster.models.Bill;
 
 public interface BillRepository extends JpaRepository<Bill, Long> {
 
-	@Query("SELECT b FROM Bill b WHERE b.user.userId=:userId and b.status='PENDING'")
+	@Query("SELECT b FROM Bill b WHERE b.user.userId=:userId and b.status='PENDING'") // remove pending get all data including paid
 	List<Bill> findByUserId(@Param("userId") int userId);
+	
+	@Query("SELECT b FROM Bill b WHERE b.user.userId=:userId") // remove pending get all data including paid
+	List<Bill> findByUserIdForAllBills(@Param("userId") int userId);
 
 	@Query("SELECT b FROM Bill b WHERE b.user.userId=:userId and b.status='PAID'")
 	List<Bill> findTransactionHistoryByUserId(@Param("userId") int userId);

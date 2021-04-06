@@ -74,9 +74,9 @@ public class BillController {
 	
 	
 	@GetMapping("/api/bill/{userId}")
-    public List<Bill> findCustomerById(@PathVariable("userId") int id) {
+    public List<Bill> findCustomerByIdForAllBills(@PathVariable("userId") int id) {
 
-        return billRepository.findByUserId(id);
+        return billRepository.findByUserIdForAllBills(id);
     }
 	
 	
