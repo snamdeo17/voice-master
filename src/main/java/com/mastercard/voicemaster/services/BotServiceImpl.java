@@ -2,10 +2,12 @@ package com.mastercard.voicemaster.services;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,6 +38,8 @@ import com.mastercard.voicemaster.repository.CustomerRepository;
 @Service
 public class BotServiceImpl implements IBotService {
 
+	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+	
 	@Autowired
 	private BillRepository billRepo;
 
@@ -51,6 +57,9 @@ public class BotServiceImpl implements IBotService {
 
 	@Value("${json.path}")
 	private String path;
+	
+	private Map<String,List<Bill>> billMap = new HashMap<>();
+	private Stack<String> commandRespondedHistory = new Stack<>();
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -75,6 +84,7 @@ public class BotServiceImpl implements IBotService {
 							Customer user = userOptional.get();
 							output = output + " " + user.getFname() + " " + user.getLname();
 							obj.put("resp", output);
+							commandRespondedHistory.add(output);
 						}
 					} else {
 						obj.put("resp", rule.getOutput());
@@ -95,6 +105,7 @@ public class BotServiceImpl implements IBotService {
 							obj.put("phrase", user.getPhrase());
 							response.setHeader("userId", "" + user.getUserId());
 							obj.put("accountBalance", balance);
+							commandRespondedHistory.add(output);
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
@@ -114,6 +125,8 @@ public class BotServiceImpl implements IBotService {
 					} else {
 						obj.put("resp", rule.getOutput());
 					}
+					billMap.clear();
+					commandRespondedHistory.clear();
 					break;
 				} else if (rule.getAction().equals("CURRENTDATE")) {
 					obj.put("resp", rule.getOutput().replace("#date#", LocalDate.now().toString()));
@@ -128,6 +141,7 @@ public class BotServiceImpl implements IBotService {
 						}
 					}
 					obj.put("resp", rule.getOutput());
+					commandRespondedHistory.add(rule.getOutput());
 					break;
 				}
 
@@ -182,6 +196,7 @@ public class BotServiceImpl implements IBotService {
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
 							}
+							commandRespondedHistory.add(output);
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
@@ -220,6 +235,7 @@ public class BotServiceImpl implements IBotService {
 								obj.put("accountBalance", balance);
 
 							}
+							commandRespondedHistory.add(output);
 						} else {
 							obj.put("resp", "I don't have any matching code in my database. Please provide valid code");
 						}
@@ -241,6 +257,7 @@ public class BotServiceImpl implements IBotService {
 							obj.put("resp", output);
 							obj.put("userId", userId);
 							obj.put("accountBalance", balance);
+							commandRespondedHistory.add(output);
 						} else {
 							obj.put("resp",
 									"I don't have any matching secret code in database. Please provide valid secret code.");
@@ -302,12 +319,14 @@ public class BotServiceImpl implements IBotService {
 									res = res + " and you have enough balance for paying your all " + billName
 											+ " bills of amount " + totalBill
 											+ " rupees. Should I proceed with the payment?";
+								
+									List<Bill> list = new ArrayList<>();
 									for (Bill bill : bills) {
 										if (bill != null && bill.getStatus().equals("PENDING")) {
-											bill.setRequestPayment(true);
+											list.add(bill);											
 										}
 									}
-									billRepo.saveAll(bills);
+									billMap.put("billtopay",list);
 
 								} else if (balance < totalBill) {
 									res = res + "You don't have enough money in your account for paying " + billName
@@ -318,6 +337,7 @@ public class BotServiceImpl implements IBotService {
 								obj.put("resp", res);
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
+								commandRespondedHistory.add(res);
 							}
 						}
 
@@ -345,8 +365,9 @@ public class BotServiceImpl implements IBotService {
 										res = res + " and you have enough balance for paying your " + bill.getName()
 												+ " bill of amount " + bill.getAmount()
 												+ " rupees. Should I proceed with the payment?";
-										bill.setRequestPayment(true);
-										billRepo.save(bill);
+										List<Bill> list = new ArrayList<>();
+										list.add(bill);
+										billMap.put("billtopay",list);
 									} else if (bill != null && bill.getStatus().equals("PENDING")
 											&& balance < bill.getAmount()) {
 										res = res + "You don't have enough money in your account for paying " + billName
@@ -383,6 +404,7 @@ public class BotServiceImpl implements IBotService {
 
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
+								commandRespondedHistory.add(res);
 							}
 						}
 
@@ -407,8 +429,9 @@ public class BotServiceImpl implements IBotService {
 									res = res + " and you have enough balance for paying your " + bill.getName()
 											+ " bill with consumer ID " + consumerId + "  of amount " + bill.getAmount()
 											+ " rupees. Should I proceed with the payment?";
-									bill.setRequestPayment(true);
-									billRepo.save(bill);
+									List<Bill> list = new ArrayList<>();
+									list.add(bill);
+									billMap.put("billtopay",list);
 								} else if (bill != null && bill.getStatus().equals("PENDING")
 										&& balance < bill.getAmount()) {
 									res = res + "You don't have enough money in your account for paying " + billName
@@ -420,6 +443,7 @@ public class BotServiceImpl implements IBotService {
 								obj.put("resp", res);
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
+								commandRespondedHistory.add(res);
 							}
 						}
 
@@ -431,6 +455,25 @@ public class BotServiceImpl implements IBotService {
 							Wallet wallet = user.getWallet();
 							Account account = wallet.getAccountsInWallet().get(0);
 							float balance = 0;
+							// check prev command is for payment
+							LOGGER.info("History before yes cmd");
+							for(String t : commandRespondedHistory) {
+								LOGGER.info(t);
+							}
+							if(commandRespondedHistory.size() > 0) {
+							String prevCommand = commandRespondedHistory.pop();
+							LOGGER.info("prevCommand:"+prevCommand);
+							prevCommand = prevCommand.toLowerCase();
+							if(prevCommand.contains("Should I proceed with the payment".toLowerCase())) {
+								
+							// set payment request
+							List<Bill> billtopay = billMap.get("billtopay");
+							for(Bill b:billtopay) {
+								if(user.getUserId() == b.getUser().getUserId()) {
+								b.setRequestPayment(true);
+								}
+							}
+							billRepo.saveAll(billtopay);
 							List<Bill> bills = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
 							if (!bills.isEmpty()) {
 								Float totalAmount = 0f;
@@ -460,7 +503,12 @@ public class BotServiceImpl implements IBotService {
 								obj.put("resp", output);
 								obj.put("userId", userId);
 								obj.put("accountBalance", balance);
-							} else {
+							}
+							}
+							commandRespondedHistory.clear();
+							billMap.clear();
+							}
+							else {
 								obj.put("resp", "I don't know the context. Sorry");
 							}
 						}
