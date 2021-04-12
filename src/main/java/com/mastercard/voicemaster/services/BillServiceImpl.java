@@ -34,10 +34,10 @@ public class BillServiceImpl implements IBillService {
 		bill.setStatus("PENDING");
 		bill.setUser(customerRepo.findById(billDto.getUserId()).get());
 		Integer billMonth = billDto.getDueDate().getMonth().getValue();
-		List<Bill> dbBill = billRepo.findByUserIdAndMonth(billDto.getUserId(), billMonth, billDto.getName());
+		List<Bill> dbBill = billRepo.findByUserIdAndMonth(billDto.getUserId(), billMonth,  billDto.getConsumerId());
 		if (dbBill.size() != 0) {
-			String error = "Bill for " + bill.getName() + " is already exist for month of " + bill.getDueDate()
-					+ " date for user id " + bill.getUser().getUserId();
+			String error = "Bill for " + bill.getName() + " already exist for the Date: " + bill.getDueDate()
+					+ ", User Id: " + bill.getUser().getUserId() + " and Consumer Id: "+bill.getConsumerId();
 			LOGGER.error(error);
 			throw new BillException(error);
 		}
