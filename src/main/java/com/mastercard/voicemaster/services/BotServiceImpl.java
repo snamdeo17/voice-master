@@ -317,8 +317,8 @@ public class BotServiceImpl implements IBotService {
 								}
 								if (balance >= totalBill) {
 									res = res + " and you have enough balance for paying your all " + billName
-											+ " bills of amount " + totalBill
-											+ " rupees. Should I proceed with the payment?";
+											+ " bills of amount $" + totalBill
+											+ ". Should I proceed with the payment?";
 								
 									List<Bill> list = new ArrayList<>();
 									for (Bill bill : bills) {
@@ -363,8 +363,8 @@ public class BotServiceImpl implements IBotService {
 									if (bill != null && bill.getStatus().equals("PENDING")
 											&& balance >= bill.getAmount()) {
 										res = res + " and you have enough balance for paying your " + bill.getName()
-												+ " bill of amount " + bill.getAmount()
-												+ " rupees. Should I proceed with the payment?";
+												+ " bill of amount $" + bill.getAmount()
+												+ ". Should I proceed with the payment?";
 										List<Bill> list = new ArrayList<>();
 										list.add(bill);
 										billMap.put("billtopay",list);
@@ -427,8 +427,8 @@ public class BotServiceImpl implements IBotService {
 										consumerId);
 								if (bill != null && bill.getStatus().equals("PENDING") && balance >= bill.getAmount()) {
 									res = res + " and you have enough balance for paying your " + bill.getName()
-											+ " bill with consumer ID " + consumerId + "  of amount " + bill.getAmount()
-											+ " rupees. Should I proceed with the payment?";
+											+ " bill with consumer ID " + consumerId + "  of amount $" + bill.getAmount()
+											+ ". Should I proceed with the payment?";
 									List<Bill> list = new ArrayList<>();
 									list.add(bill);
 									billMap.put("billtopay",list);
