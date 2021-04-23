@@ -1,8 +1,8 @@
 [
 
-{"action":"ASK_LIST", "input":"show my bills","output":"Dear #user#"},
-{"action":"PROVIDECODE", "input":"my code is \\d+", "output":"Thank you #user#. Please read out below sentence to authenticate:"},
-{"action":"INIT", "input":"hello", "output":"Hello"},
+{"action":"ASK_LIST", "input":"show my \\w+","output":"Dear #user#","dictonary":["bills", "bill", "will" ,"wills","village"]},
+{"action":"PROVIDECODE", "input":"my \\w+ is \\d+", "output":"Thank you #user#. Please read out below sentence to authenticate:","dictonary":["code", "god", "record", "what","phone"]},
+{"action":"INIT", "input":"\\w+", "output":"Hello","dictonary":["hello", "hey"]},
 {"action":"THANKYOU", "input":"thank you", "output":"My pleasure"},
 {"action":"ALPHABET", "input":"teach me alphabets", "output":"Here it is, A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"},
 {"action":"CURRENTDATE", "input":"what is the current date", "output":"It is #date#"},

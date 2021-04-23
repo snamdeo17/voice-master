@@ -39,7 +39,7 @@ import com.mastercard.voicemaster.repository.CustomerRepository;
 public class BotServiceImpl implements IBotService {
 
 	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-	
+
 	@Autowired
 	private BillRepository billRepo;
 
@@ -57,9 +57,18 @@ public class BotServiceImpl implements IBotService {
 
 	@Value("${json.path}")
 	private String path;
-	
-	private Map<String,List<Bill>> billMap = new HashMap<>();
+
+	private Map<String, List<Bill>> billMap = new HashMap<>();
 	private Stack<String> commandRespondedHistory = new Stack<>();
+
+	private boolean searchInDistonary(RuleDTO rule, String message) {
+		if (rule.getDictonary() != null) {
+			boolean matched = rule.getDictonary().stream().anyMatch(word -> message.matches(rule.getInput().replace("\\w+", word)));
+			return matched;
+		} else {
+			return true;
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -73,7 +82,7 @@ public class BotServiceImpl implements IBotService {
 
 		JSONObject obj = new JSONObject();
 		for (RuleDTO rule : rules) {
-			if (message.matches(rule.getInput())) {
+			if (message.matches(rule.getInput()) && searchInDistonary(rule, message)) {
 				String userId = request.getHeader("userId");
 				Boolean isVoiceAuthenticated = Boolean.parseBoolean(request.getHeader("isVoiceAuthenticated"));
 				if (rule.getAction().equals("INIT")) {
@@ -173,15 +182,16 @@ public class BotServiceImpl implements IBotService {
 										jsonArray.add(formDetailsJson);
 										String billName = bill.getName().trim();
 										if (null != billCount.get(billName)) {
-											billCount.put(billName, (billCount.get(billName)+1));
+											billCount.put(billName, (billCount.get(billName) + 1));
 										} else {
 											billCount.put(billName, 1);
 										}
-																			
+
 									}
 								}
-								for(String key : billCount.keySet()) {
-									output = output + billCount.get(key) + " " + key + ((billCount.get(key)==1)? " bill" : " bills");
+								for (String key : billCount.keySet()) {
+									output = output + billCount.get(key) + " " + key
+											+ ((billCount.get(key) == 1) ? " bill" : " bills");
 								}
 							}
 							if (jsonArray.isEmpty()) {
@@ -317,16 +327,15 @@ public class BotServiceImpl implements IBotService {
 								}
 								if (balance >= totalBill) {
 									res = res + " and you have enough balance for paying your all " + billName
-											+ " bills of amount $" + totalBill
-											+ ". Should I proceed with the payment?";
-								
+											+ " bills of amount $" + totalBill + ". Should I proceed with the payment?";
+
 									List<Bill> list = new ArrayList<>();
 									for (Bill bill : bills) {
 										if (bill != null && bill.getStatus().equals("PENDING")) {
-											list.add(bill);											
+											list.add(bill);
 										}
 									}
-									billMap.put("billtopay",list);
+									billMap.put("billtopay", list);
 
 								} else if (balance < totalBill) {
 									res = res + "You don't have enough money in your account for paying " + billName
@@ -367,7 +376,7 @@ public class BotServiceImpl implements IBotService {
 												+ ". Should I proceed with the payment?";
 										List<Bill> list = new ArrayList<>();
 										list.add(bill);
-										billMap.put("billtopay",list);
+										billMap.put("billtopay", list);
 									} else if (bill != null && bill.getStatus().equals("PENDING")
 											&& balance < bill.getAmount()) {
 										res = res + "You don't have enough money in your account for paying " + billName
@@ -427,11 +436,11 @@ public class BotServiceImpl implements IBotService {
 										consumerId);
 								if (bill != null && bill.getStatus().equals("PENDING") && balance >= bill.getAmount()) {
 									res = res + " and you have enough balance for paying your " + bill.getName()
-											+ " bill with consumer ID " + consumerId + "  of amount $" + bill.getAmount()
-											+ ". Should I proceed with the payment?";
+											+ " bill with consumer ID " + consumerId + "  of amount $"
+											+ bill.getAmount() + ". Should I proceed with the payment?";
 									List<Bill> list = new ArrayList<>();
 									list.add(bill);
-									billMap.put("billtopay",list);
+									billMap.put("billtopay", list);
 								} else if (bill != null && bill.getStatus().equals("PENDING")
 										&& balance < bill.getAmount()) {
 									res = res + "You don't have enough money in your account for paying " + billName
@@ -457,58 +466,57 @@ public class BotServiceImpl implements IBotService {
 							float balance = 0;
 							// check prev command is for payment
 							LOGGER.info("History before yes cmd");
-							for(String t : commandRespondedHistory) {
+							for (String t : commandRespondedHistory) {
 								LOGGER.info(t);
 							}
-							if(commandRespondedHistory.size() > 0) {
-							String prevCommand = commandRespondedHistory.pop();
-							LOGGER.info("prevCommand:"+prevCommand);
-							prevCommand = prevCommand.toLowerCase();
-							if(prevCommand.contains("Should I proceed with the payment".toLowerCase())) {
-								
-							// set payment request
-							List<Bill> billtopay = billMap.get("billtopay");
-							for(Bill b:billtopay) {
-								if(user.getUserId() == b.getUser().getUserId()) {
-								b.setRequestPayment(true);
-								}
-							}
-							billRepo.saveAll(billtopay);
-							List<Bill> bills = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
-							if (!bills.isEmpty()) {
-								Float totalAmount = 0f;
-								String billName = "";
-								Integer sid = 0;
-								for (Bill bill : bills) {
-									bill.setStatus("PAID");
-									bill.setPaidOn(LocalDate.now());
-									totalAmount += bill.getAmount();
-									billName = bill.getName();
-									sid = bill.getConsumerId();
-								}
-								billRepo.saveAll(bills);
-								if (bills.size() == 1) {
-									output = output + ", I have paid the amount of " + totalAmount + " for your "
-											+ billName + " bill with Consumer ID" + sid;
-								} else {
-									output = output + ", I have paid the amount of " + totalAmount + " for your "
-											+ billName + " bills.";
-								}
+							if (commandRespondedHistory.size() > 0) {
+								String prevCommand = commandRespondedHistory.pop();
+								LOGGER.info("prevCommand:" + prevCommand);
+								prevCommand = prevCommand.toLowerCase();
+								if (prevCommand.contains("Should I proceed with the payment".toLowerCase())) {
 
-								Account acc = walletService.withdrawFromAccount(wallet.getWalletId(),
-										account.getAccountNumber(), totalAmount, "WITHDRAW", billName);
-								output = output + " Now you have " + acc.getBalance() + " in  your account.";
-								balance = acc.getBalance();
+									// set payment request
+									List<Bill> billtopay = billMap.get("billtopay");
+									for (Bill b : billtopay) {
+										if (user.getUserId() == b.getUser().getUserId()) {
+											b.setRequestPayment(true);
+										}
+									}
+									billRepo.saveAll(billtopay);
+									List<Bill> bills = billRepo.findByUserIdAndRequestPayment(Integer.parseInt(userId));
+									if (!bills.isEmpty()) {
+										Float totalAmount = 0f;
+										String billName = "";
+										Integer sid = 0;
+										for (Bill bill : bills) {
+											bill.setStatus("PAID");
+											bill.setPaidOn(LocalDate.now());
+											totalAmount += bill.getAmount();
+											billName = bill.getName();
+											sid = bill.getConsumerId();
+										}
+										billRepo.saveAll(bills);
+										if (bills.size() == 1) {
+											output = output + ", I have paid the amount of " + totalAmount
+													+ " for your " + billName + " bill with Consumer ID" + sid;
+										} else {
+											output = output + ", I have paid the amount of " + totalAmount
+													+ " for your " + billName + " bills.";
+										}
 
-								obj.put("resp", output);
-								obj.put("userId", userId);
-								obj.put("accountBalance", balance);
-							}
-							}
-							commandRespondedHistory.clear();
-							billMap.clear();
-							}
-							else {
+										Account acc = walletService.withdrawFromAccount(wallet.getWalletId(),
+												account.getAccountNumber(), totalAmount, "WITHDRAW", billName);
+										output = output + " Now you have " + acc.getBalance() + " in  your account.";
+										balance = acc.getBalance();
+
+										obj.put("resp", output);
+										obj.put("userId", userId);
+										obj.put("accountBalance", balance);
+									}
+								}
+								commandRespondedHistory.clear();
+								billMap.clear();
+							} else {
 								obj.put("resp", "I don't know the context. Sorry");
 							}
 						}
