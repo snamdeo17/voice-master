@@ -20,3 +20,11 @@ Step 5 : run the project
 
 $ java -jar target/voicemaster-0.0.1-SNAPSHOT.jar
 Now navigate to http://localhost:8080/
+
+No initial setup required for database queries.
+
+# Deposit after server start
+http://10.12.6.165:8080/api/wallet/{wallet-id}/account/{account-id}/deposit/{amount}
+
+
+
