@@ -1,5 +1,5 @@
 # voice-master
-This is an assignment for preparing the mastercard interview. This application is based on voice recognition system which will perform action through the voice commands.
+This application is based on voice recognition system which will perform action through the voice commands.
 
 How to run the project
 
